@@ -36,6 +36,7 @@ textinput.set_visible(id, true)
 * `textinput.set_auto_capitalize(id, capitalize_value)`
 * `textinput.get_text(id)`
 * `textinput.focus(id)`
+* `textinput.clear_focus(id)`
 * `textinput.destroy(id)`
 ## Exposed Constants:
 * KeyboardType: `textinput.KEYBOARD_TYPE_DEFAULT`, `textinput.KEYBOARD_TYPE_NUMBER_PAD`, `textinput.KEYBOARD_TYPE_EMAIL`, `textinput.KEYBOARD_TYPE_PASSWORD`
