@@ -134,12 +134,19 @@ static int TextInput_GetText(lua_State* L)
 	return 1;
 }
 
-
 static int TextInput_Focus(lua_State* L)
 {
 	DM_LUA_STACK_CHECK(L, 0);
 	int id = luaL_checknumber(L, 1);
 	dmTextInput::Focus(id);
+	return 0;
+}
+
+static int TextInput_ClearFocus(lua_State* L)
+{
+	DM_LUA_STACK_CHECK(L, 0);
+	int id = luaL_checknumber(L, 1);
+	dmTextInput::ClearFocus(id);
 	return 0;
 }
 
@@ -161,6 +168,7 @@ static const luaL_reg Module_methods[] =
 	{"set_auto_capitalize", TextInput_SetAutoCapitalize},
 	{"get_text", TextInput_GetText},
 	{"focus", TextInput_Focus},
+	{"clear_focus", TextInput_ClearFocus},
 	{0, 0}
 };
 

@@ -299,13 +299,24 @@ public class TextInputJNI {
       public void run() {
         EditTextInfo info = getEditTextInfo(id);
         if (info != null) {
-          info.editText.requestFocus();
-          info.editText.postDelayed(new Runnable() {
-            @Override public void run() {
-              InputMethodManager imm = (InputMethodManager)mActivity.getSystemService(Context.INPUT_METHOD_SERVICE);
-              imm.showSoftInput(info.editText, InputMethodManager.SHOW_IMPLICIT);
-            }
-          }, 200);
+          if (info.editText.requestFocus()) {
+            InputMethodManager imm = (InputMethodManager)mActivity.getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.showSoftInput(info.editText, InputMethodManager.SHOW_IMPLICIT);
+           }
+        }
+      }
+    });
+  }
+
+  public void clearFocus(int id) {
+    mActivity.runOnUiThread(new Runnable() {
+      @Override
+      public void run() {
+        EditTextInfo info = getEditTextInfo(id);
+        if (info != null) {
+          InputMethodManager imm = (InputMethodManager)mActivity.getSystemService(Context.INPUT_METHOD_SERVICE);
+          imm.hideSoftInputFromWindow(info.editText.getWindowToken(), 0);
+          info.editText.clearFocus();
         }
       }
     });

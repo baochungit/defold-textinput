@@ -45,6 +45,7 @@ extern void SetKeyboardType(int id, KeyboardType keyboardType);
 extern void SetAutoCapitalize(int id, Capitalize autoCapitalize);
 extern const char* GetText(int id);
 extern void Focus(int id);
+extern void ClearFocus(int id);
 
 // Command Queue
 struct DM_ALIGNED(16) Command

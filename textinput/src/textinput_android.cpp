@@ -26,6 +26,7 @@ struct TextInput
 	jmethodID          m_SetAutoCapitalize;
 	jmethodID          m_GetText;
 	jmethodID          m_Focus;
+	jmethodID          m_ClearFocus;
 
 	std::map<int,dmScript::LuaCallbackInfo*> m_Listeners;
 	CommandQueue							 m_CommandQueue;
@@ -93,6 +94,7 @@ void Initialize()
 	g_TextInput.m_SetAutoCapitalize = env->GetMethodID(cls, "setAutoCapitalize", "(II)V");
 	g_TextInput.m_GetText = env->GetMethodID(cls, "getText", "(I)Ljava/lang/String;");
 	g_TextInput.m_Focus = env->GetMethodID(cls, "focus", "(I)V");
+	g_TextInput.m_ClearFocus = env->GetMethodID(cls, "clearFocus", "(I)V");
 
 	Queue_Create(&g_TextInput.m_CommandQueue);
 }
@@ -276,6 +278,14 @@ void Focus(int id)
 	JNIEnv* env = threadAttacher.GetEnv();
 
 	env->CallVoidMethod(g_TextInput.m_Instance, g_TextInput.m_Focus, id);
+}
+
+void ClearFocus(int id)
+{
+	dmAndroid::ThreadAttacher threadAttacher;
+	JNIEnv* env = threadAttacher.GetEnv();
+
+	env->CallVoidMethod(g_TextInput.m_Instance, g_TextInput.m_ClearFocus, id);
 }
 
 } // namespace
