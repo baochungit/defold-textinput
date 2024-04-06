@@ -359,11 +359,7 @@ public class TextInputJNI {
       return mLayout1;
     } else {
       if (mLayout2 == null) {
-        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
-          FrameLayout.LayoutParams.MATCH_PARENT,
-          FrameLayout.LayoutParams.MATCH_PARENT,
-          Gravity.TOP | Gravity.LEFT
-        );
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, 0, Gravity.TOP);
         mLayout2 = new FrameLayout(mActivity);
         mLayoutMaster.addView(mLayout2, params);
         refreshLayoutMaster();
