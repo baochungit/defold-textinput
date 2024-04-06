@@ -183,6 +183,7 @@ public class TextInputJNI {
         EditTextInfo info = getEditTextInfo(id);
         if (info != null) {
           info.editText.setText(text);
+          info.editText.setSelection(info.editText.getText().length());
         }
       }
     });
