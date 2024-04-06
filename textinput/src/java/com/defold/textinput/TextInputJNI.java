@@ -332,8 +332,8 @@ public class TextInputJNI {
       );
       layoutMasterParams.gravity = Gravity.TOP | Gravity.LEFT;
       layoutMasterParams.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING;
-      layoutMasterParams.width = WindowManager.LayoutParams.MATCH_PARENT;
-      layoutMasterParams.height = 0;
+      layoutMasterParams.width = 1;
+      layoutMasterParams.height = 1;
 
       mLayoutMaster = new FrameLayout(mActivity) {
         @Override
@@ -359,7 +359,7 @@ public class TextInputJNI {
       return mLayout1;
     } else {
       if (mLayout2 == null) {
-        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, 0, Gravity.TOP);
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(0, 0);
         mLayout2 = new FrameLayout(mActivity);
         mLayoutMaster.addView(mLayout2, params);
         refreshLayoutMaster();
@@ -369,7 +369,8 @@ public class TextInputJNI {
   }
 
   private void refreshLayoutMaster() {
-    layoutMasterParams.height = mLayout2 != null ? WindowManager.LayoutParams.MATCH_PARENT : 0;
+    layoutMasterParams.width = mLayout2 != null ? WindowManager.LayoutParams.MATCH_PARENT : 1;
+    layoutMasterParams.height = mLayout2 != null ? WindowManager.LayoutParams.MATCH_PARENT : 1;
     WindowManager wm = mActivity.getWindowManager();
     wm.updateViewLayout(mLayoutMaster, layoutMasterParams);
   }
