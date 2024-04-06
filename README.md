@@ -34,12 +34,16 @@ textinput.set_visible(id, true)
 * `textinput.set_max_length(id, max_length)`
 * `textinput.set_keyboard_type(id, keyboard_type)`
 * `textinput.set_auto_capitalize(id, capitalize)`
+* `textinput.set_return_key_type(id, return_key_type)`
 * `textinput.get_text(id)`
 * `textinput.focus(id)`
 * `textinput.clear_focus(id)`
 * `textinput.destroy(id)`
+
 ## Exposed Constants:
 * KeyboardType: `textinput.KEYBOARD_TYPE_DEFAULT`, `textinput.KEYBOARD_TYPE_NUMBER_PAD`, `textinput.KEYBOARD_TYPE_EMAIL`, `textinput.KEYBOARD_TYPE_PASSWORD`
 * Capitalize: `textinput.CAPITALIZE_NONE`, `textinput.CAPITALIZE_SENTENCES`, `textinput.CAPITALIZE_WORDS`, `textinput.CAPITALIZE_CHARACTERS`
+* ReturnKeyType: `textinput.RETURN_KEY_TYPE_DONE`, `textinput.RETURN_KEY_TYPE_GO`, `textinput.RETURN_KEY_TYPE_NEXT`, `textinput.RETURN_KEY_TYPE_SEARCH`, `textinput.RETURN_KEY_TYPE_SEND`
 * Event: `textinput.EVENT_ON_SUBMIT`, `textinput.EVENT_ON_TEXT_CHANGED`, `textinput.EVENT_ON_FOCUS_CHANGE`
+
 ---
