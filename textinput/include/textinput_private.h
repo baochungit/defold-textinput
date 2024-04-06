@@ -20,6 +20,15 @@ enum Capitalize
 	CAPITALIZE_CHARACTERS,
 };
 
+enum ReturnKeyType
+{
+	RETURN_KEY_TYPE_DONE,
+    RETURN_KEY_TYPE_GO,
+    RETURN_KEY_TYPE_NEXT,
+    RETURN_KEY_TYPE_SEARCH,
+    RETURN_KEY_TYPE_SEND,
+};
+
 enum Event
 {
 	EVENT_ON_SUBMIT,
@@ -43,6 +52,7 @@ extern void SetSize(int id, int width, int height);
 extern void SetMaxLength(int id, int maxLength);
 extern void SetKeyboardType(int id, KeyboardType keyboardType);
 extern void SetAutoCapitalize(int id, Capitalize autoCapitalize);
+extern void SetReturnKeyType(int id, ReturnKeyType returnKeyType);
 extern const char* GetText(int id);
 extern void Focus(int id);
 extern void ClearFocus(int id);

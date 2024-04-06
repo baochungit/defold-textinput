@@ -1,11 +1,27 @@
 
+local function focus(self, id)
+	if textinput then
+		self.active_id = id
+		textinput.focus(id)
+	end
+end
+
+local function clear_focus(self)
+	if textinput and self.active_id then
+		textinput.clear_focus(self.active_id)
+	end
+end
+
 local function create_textinput1(self)
 	local id = textinput.create(true, function(_, ev, data)
 		if ev == textinput.EVENT_ON_TEXT_CHANGED then
 			gui.set_text(gui.get_node("text1"), data)
+		elseif ev == textinput.EVENT_ON_SUBMIT then
+			focus(self, self.id2)
 		end
 	end)
 	textinput.set_auto_capitalize(id, textinput.CAPITALIZE_WORDS)
+	textinput.set_return_key_type(id, textinput.RETURN_KEY_TYPE_GO)
 	return id
 end
 
@@ -30,19 +46,6 @@ local function create_textinput3(self)
 	textinput.set_auto_capitalize(id, textinput.CAPITALIZE_SENTENCES)
 	textinput.set_visible(id, true)
 	return id
-end
-
-local function focus(self, id)
-	if textinput then
-		self.active_id = id
-		textinput.focus(id)
-	end
-end
-
-local function clear_focus(self)
-	if textinput and self.active_id then
-		textinput.clear_focus(self.active_id)
-	end
 end
 
 function init(self)

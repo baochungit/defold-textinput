@@ -125,6 +125,15 @@ static int TextInput_SetAutoCapitalize(lua_State* L)
 	return 0;
 }
 
+static int TextInput_SetReturnKeyType(lua_State* L)
+{
+	DM_LUA_STACK_CHECK(L, 0);
+	int id = luaL_checknumber(L, 1);
+	int returnKeyType = luaL_checknumber(L, 2);
+	dmTextInput::SetReturnKeyType(id, (dmTextInput::ReturnKeyType)returnKeyType);
+	return 0;
+}
+
 static int TextInput_GetText(lua_State* L)
 {
 	DM_LUA_STACK_CHECK(L, 1);
@@ -166,6 +175,7 @@ static const luaL_reg Module_methods[] =
 	{"set_max_length", TextInput_SetMaxLength},
 	{"set_keyboard_type", TextInput_SetKeyboardType},
 	{"set_auto_capitalize", TextInput_SetAutoCapitalize},
+	{"set_return_key_type", TextInput_SetReturnKeyType},
 	{"get_text", TextInput_GetText},
 	{"focus", TextInput_Focus},
 	{"clear_focus", TextInput_ClearFocus},
@@ -198,6 +208,17 @@ static void LuaInit(lua_State* L)
 	SETCAPITALIZE(WORDS)
 	SETCAPITALIZE(CHARACTERS)
 #undef SETCAPITALIZE
+
+#define SETRETURNKEYTYPE(name) \
+	lua_pushnumber(L, (lua_Number) dmTextInput::RETURN_KEY_TYPE_##name); \
+	lua_setfield(L, -2, "RETURN_KEY_TYPE_"#name);\
+
+	SETRETURNKEYTYPE(DONE)
+	SETRETURNKEYTYPE(GO)
+	SETRETURNKEYTYPE(NEXT)
+	SETRETURNKEYTYPE(SEARCH)
+	SETRETURNKEYTYPE(SEND)
+#undef SETRETURNKEYTYPE
 
 #define SETEVENT(name) \
 	lua_pushnumber(L, (lua_Number) dmTextInput::EVENT_##name); \

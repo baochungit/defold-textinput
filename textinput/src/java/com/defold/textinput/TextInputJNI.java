@@ -41,6 +41,14 @@ public class TextInputJNI {
     CHARACTERS;
   }
 
+  public enum ReturnKeyType {
+    DONE,
+    GO,
+    NEXT,
+    SEARCH,
+    SEND;
+  }
+
   private class EditTextInfo {
     EditText                    editText;
     FrameLayout.LayoutParams    params;
@@ -86,7 +94,7 @@ public class TextInputJNI {
         editText.setOnEditorActionListener(new EditText.OnEditorActionListener() {
            @Override
            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-             if (actionId == EditorInfo.IME_ACTION_DONE) {
+             if (actionId == EditorInfo.IME_ACTION_DONE || actionId == EditorInfo.IME_ACTION_SEND || actionId == EditorInfo.IME_ACTION_SEARCH || actionId == EditorInfo.IME_ACTION_GO) {
                 self.onSubmit(id, editText.getText().toString());
              }
              return false;
@@ -278,6 +286,31 @@ public class TextInputJNI {
       }
     });
   }
+
+  public void setReturnKeyType(int id, int returnKeyType) {
+    mActivity.runOnUiThread(new Runnable() {
+      @Override
+      public void run() {
+        EditTextInfo info = getEditTextInfo(id);
+        if (info != null) {
+          ReturnKeyType type = ReturnKeyType.values()[returnKeyType];
+          if (type == ReturnKeyType.DONE) {
+            info.editText.setImeOptions(EditorInfo.IME_ACTION_DONE);
+          } else if (type == ReturnKeyType.GO) {
+            info.editText.setImeOptions(EditorInfo.IME_ACTION_GO);
+          } else if (type == ReturnKeyType.NEXT && !info.isHidden) {
+            info.editText.setImeOptions(EditorInfo.IME_ACTION_NEXT);
+          } else if (type == ReturnKeyType.SEARCH) {
+            info.editText.setImeOptions(EditorInfo.IME_ACTION_SEARCH);
+          } else if (type == ReturnKeyType.SEND) {
+            info.editText.setImeOptions(EditorInfo.IME_ACTION_SEND);
+          }
+        }
+      }
+    });
+  }
+
+  
 
   public String getText(int id) {
     FutureTask<String> futureResult = new FutureTask<String>(new Callable<String>() {
