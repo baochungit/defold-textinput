@@ -27,15 +27,16 @@ textinput.set_visible(id, true)
 * `textinput.set_position(id, x, y)`
 * `textinput.set_size(id, width, height)`
 * `textinput.set_text(id, text)`
-* `textinput.set_text_color(id, color_str)`
+* `textinput.set_text_color(id, color)`
 * `textinput.set_text_size(id, text_size)`
 * `textinput.set_hint(id, hint)`
-* `textinput.set_hint_text_color(id, color_str")`
+* `textinput.set_hint_text_color(id, color)`
 * `textinput.set_max_length(id, max_length)`
 * `textinput.set_keyboard_type(id, keyboard_type)`
-* `textinput.set_auto_capitalize(id, capitalize_value)`
+* `textinput.set_auto_capitalize(id, capitalize)`
 * `textinput.get_text(id)`
 * `textinput.focus(id)`
+* `textinput.clear_focus(id)`
 * `textinput.destroy(id)`
 ## Exposed Constants:
 * KeyboardType: `textinput.KEYBOARD_TYPE_DEFAULT`, `textinput.KEYBOARD_TYPE_NUMBER_PAD`, `textinput.KEYBOARD_TYPE_EMAIL`, `textinput.KEYBOARD_TYPE_PASSWORD`
