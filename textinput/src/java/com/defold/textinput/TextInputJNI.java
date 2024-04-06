@@ -310,8 +310,6 @@ public class TextInputJNI {
     });
   }
 
-  
-
   public String getText(int id) {
     FutureTask<String> futureResult = new FutureTask<String>(new Callable<String>() {
       @Override
@@ -380,11 +378,7 @@ public class TextInputJNI {
       WindowManager wm = mActivity.getWindowManager();
       wm.addView(mLayoutMaster, layoutMasterParams);
 
-      FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
-        FrameLayout.LayoutParams.MATCH_PARENT,
-        FrameLayout.LayoutParams.MATCH_PARENT,
-        Gravity.TOP | Gravity.LEFT
-      );
+      FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(1, 1);
       mLayout1 = new FrameLayout(mActivity);
       mLayoutMaster.addView(mLayout1, params);
     }
@@ -392,7 +386,11 @@ public class TextInputJNI {
       return mLayout1;
     } else {
       if (mLayout2 == null) {
-        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(0, 0);
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
+          FrameLayout.LayoutParams.MATCH_PARENT,
+          FrameLayout.LayoutParams.MATCH_PARENT,
+          Gravity.TOP | Gravity.LEFT
+        );
         mLayout2 = new FrameLayout(mActivity);
         mLayoutMaster.addView(mLayout2, params);
         refreshLayoutMaster();
