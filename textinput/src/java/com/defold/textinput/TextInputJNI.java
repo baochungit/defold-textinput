@@ -365,9 +365,9 @@ public class TextInputJNI {
       );
       layoutMasterParams.gravity = Gravity.TOP | Gravity.LEFT;
       layoutMasterParams.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING;
-      if (Build.VERSION.SDK_INT < 30) {
+      // if (Build.VERSION.SDK_INT < 30) {
         layoutMasterParams.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE;
-      }
+      // }
       if (Build.VERSION.SDK_INT >= 28) {
         layoutMasterParams.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS;
       }
