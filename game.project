@@ -37,6 +37,7 @@ app_icon_144x144 = /assets/app_icons/icon_144.png
 app_icon_192x192 = /assets/app_icons/icon_192.png
 input_method = HiddenInputField
 manifest = /builtins/manifests/android/AndroidManifest.xml
+immersive_mode = 1
 
 [script]
 shared_state = 1

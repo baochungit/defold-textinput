@@ -9,6 +9,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.view.KeyEvent;
 import android.view.WindowManager;
+import android.view.WindowInsetsController;
 import android.graphics.PixelFormat;
 import android.util.Log;
 import android.widget.FrameLayout;
@@ -363,6 +364,7 @@ public class TextInputJNI {
       );
       layoutMasterParams.gravity = Gravity.TOP | Gravity.LEFT;
       layoutMasterParams.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING;
+      layoutMasterParams.systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
       layoutMasterParams.width = 1;
       layoutMasterParams.height = 1;
 
@@ -377,6 +379,9 @@ public class TextInputJNI {
 
       WindowManager wm = mActivity.getWindowManager();
       wm.addView(mLayoutMaster, layoutMasterParams);
+
+      WindowInsetsController windowInsetsController = mLayoutMaster.getWindowInsetsController();
+      windowInsetsController.setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
 
       FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(1, 1);
       mLayout1 = new FrameLayout(mActivity);
