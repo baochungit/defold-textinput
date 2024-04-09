@@ -374,8 +374,8 @@ public class TextInputJNI {
                                               | View.SYSTEM_UI_FLAG_FULLSCREEN
                                               | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
       }
-      if (Build.VERSION.SDK_INT >= 30) {
-        layoutMasterParams.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS;
+      if (Build.VERSION.SDK_INT >= 28) {
+        layoutMasterParams.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
       }
       layoutMasterParams.width = 1;
       layoutMasterParams.height = 1;
