@@ -9,6 +9,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.view.KeyEvent;
 import android.view.WindowManager;
+import android.view.WindowInsets;
 import android.view.WindowInsetsController;
 import android.graphics.PixelFormat;
 import android.util.Log;
@@ -365,9 +366,10 @@ public class TextInputJNI {
       );
       layoutMasterParams.gravity = Gravity.TOP | Gravity.LEFT;
       layoutMasterParams.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING;
-      // if (Build.VERSION.SDK_INT < 30) {
-        layoutMasterParams.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE;
-      // }
+      if (Build.VERSION.SDK_INT < 30) {
+        layoutMasterParams.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE;
+      }
       if (Build.VERSION.SDK_INT >= 28) {
         layoutMasterParams.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS;
       }
@@ -389,6 +391,7 @@ public class TextInputJNI {
       if (Build.VERSION.SDK_INT >= 30) {
         WindowInsetsController windowInsetsController = mLayoutMaster.getWindowInsetsController();
         windowInsetsController.setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+        windowInsetsController.hide(WindowInsets.Type.systemBars());
       }
 
       FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(1, 1);
