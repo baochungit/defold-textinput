@@ -242,7 +242,7 @@ dmExtension::Result InitializeTextInput(dmExtension::Params* params)
 {
 	// Init Lua
 	LuaInit(params->m_L);
-	dmTextInput::Initialize();
+	dmTextInput::Initialize(params);
 	printf("Registered %s Extension\n", MODULE_NAME);
 	return dmExtension::RESULT_OK;
 }

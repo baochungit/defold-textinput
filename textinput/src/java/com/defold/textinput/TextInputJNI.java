@@ -62,6 +62,8 @@ public class TextInputJNI {
   };
 
   private Activity mActivity;
+  private boolean mImmersiveMode = false;
+  private boolean mDisplayCutout = false;
   private ArrayList<EditTextInfo> mList;
   private WindowManager.LayoutParams layoutMasterParams;
   private FrameLayout mLayoutMaster;
@@ -73,8 +75,10 @@ public class TextInputJNI {
   public native void onTextChanged(int id, String text);
   public native void onFocusChange(int id, boolean hasFocus);
 
-  public TextInputJNI(Activity activity) {
+  public TextInputJNI(Activity activity, boolean immersiveMode, boolean displayCutout) {
     mActivity = activity;
+    mImmersiveMode = immersiveMode;
+    mDisplayCutout = displayCutout;
     mList = new ArrayList<EditTextInfo>();
   }
 
@@ -367,14 +371,23 @@ public class TextInputJNI {
       layoutMasterParams.gravity = Gravity.TOP | Gravity.LEFT;
       layoutMasterParams.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING;
       if (Build.VERSION.SDK_INT < 30) {
-        layoutMasterParams.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+        if (mImmersiveMode) {
+          layoutMasterParams.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                                               | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
                                               | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
                                               | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                                               | View.SYSTEM_UI_FLAG_FULLSCREEN
                                               | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+        } else {
+          layoutMasterParams.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                                              // | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                                              | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                                              // | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                                              | View.SYSTEM_UI_FLAG_FULLSCREEN
+                                              | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+        }
       }
-      if (Build.VERSION.SDK_INT >= 28) {
+      if (mDisplayCutout && Build.VERSION.SDK_INT >= 28) {
         layoutMasterParams.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
       }
       layoutMasterParams.width = 1;
@@ -395,7 +408,11 @@ public class TextInputJNI {
       if (Build.VERSION.SDK_INT >= 30) {
         WindowInsetsController windowInsetsController = mLayoutMaster.getWindowInsetsController();
         windowInsetsController.setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
-        windowInsetsController.hide(WindowInsets.Type.systemBars());
+        if (mImmersiveMode) {
+          windowInsetsController.hide(WindowInsets.Type.systemBars());
+        } else {
+          windowInsetsController.hide(WindowInsets.Type.statusBars());
+        }
       }
 
       FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(1, 1);

@@ -36,7 +36,7 @@ enum Event
 	EVENT_ON_FOCUS_CHANGE,
 };
 
-extern void Initialize();
+extern void Initialize(dmExtension::Params* params);
 extern void Update();
 extern void Finalize();
 extern int Create(bool isHidden, dmScript::LuaCallbackInfo* callback);

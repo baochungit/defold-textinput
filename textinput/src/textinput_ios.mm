@@ -6,7 +6,7 @@
 
 namespace dmTextInput {
 
-void Initialize()
+void Initialize(dmExtension::Params* params)
 {
 }
 

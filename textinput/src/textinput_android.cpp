@@ -4,6 +4,7 @@
 #include <string.h>
 #include <dmsdk/sdk.h>
 #include <dmsdk/dlib/android.h>
+#include <dmsdk/dlib/configfile.h>
 #include "textinput_private.h"
 
 namespace dmTextInput {
@@ -70,15 +71,18 @@ extern "C" {
 	}
 }
 
-void Initialize()
+void Initialize(dmExtension::Params* params)
 {
 	dmAndroid::ThreadAttacher threadAttacher;
 	JNIEnv* env = threadAttacher.GetEnv();
 
 	jclass cls = dmAndroid::LoadClass(env, "com.defold.textinput.TextInputJNI");
 
-	jmethodID constructor = env->GetMethodID(cls, "<init>", "(Landroid/app/Activity;)V");
-	g_TextInput.m_Instance = env->NewGlobalRef(env->NewObject(cls, constructor, threadAttacher.GetActivity()->clazz));
+	int32_t immersiveMode = dmConfigFile::GetInt(params->m_ConfigFile, "android.immersive_mode", 0);
+	int32_t displayCutout = dmConfigFile::GetInt(params->m_ConfigFile, "android.display_cutout", 1);
+
+	jmethodID constructor = env->GetMethodID(cls, "<init>", "(Landroid/app/Activity;ZZ)V");
+	g_TextInput.m_Instance = env->NewGlobalRef(env->NewObject(cls, constructor, threadAttacher.GetActivity()->clazz, immersiveMode == 1, displayCutout == 1));
 
 	g_TextInput.m_Create = env->GetMethodID(cls, "create", "(Z)I");
 	g_TextInput.m_Destroy = env->GetMethodID(cls, "destroy", "(I)V");
