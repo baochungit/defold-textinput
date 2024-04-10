@@ -365,7 +365,7 @@ public class TextInputJNI {
     if (mLayoutMaster == null) {
       layoutMasterParams = new WindowManager.LayoutParams(
         WindowManager.LayoutParams.TYPE_APPLICATION,
-        WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
+        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
         PixelFormat.TRANSLUCENT
       );
       layoutMasterParams.gravity = Gravity.TOP | Gravity.LEFT;
@@ -404,6 +404,9 @@ public class TextInputJNI {
 
       WindowManager wm = mActivity.getWindowManager();
       wm.addView(mLayoutMaster, layoutMasterParams);
+
+      layoutMasterParams.flags = WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL;
+      wm.updateViewLayout(mLayoutMaster, layoutMasterParams);
 
       if (Build.VERSION.SDK_INT >= 30) {
         WindowInsetsController windowInsetsController = mLayoutMaster.getWindowInsetsController();
