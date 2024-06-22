@@ -1,5 +1,5 @@
 #if defined(DM_PLATFORM_IOS)
-
+/*
 // Please help to finish this for iOS platform.
 // Thanks!
 
@@ -172,7 +172,7 @@ int Create(bool isHidden, dmScript::LuaCallbackInfo* callback)
 	TextInputDelegate* textInput = [TextInputDelegate alloc];
 	textInput.keyboardType = UIKeyboardTypeDefault;
 	textInput.autocapitalizationType = UITextAutocapitalizationTypeNone;
-	textInput.returnKeyType = UIReturnKeyDone;
+	textInput.returnKeyType = isHidden ? UIReturnKeyDone : UIReturnKeyDefault;
 	textInput.secureTextEntry = NO;
 	textInput.visible = YES;
 	textInput.focused = NO;
@@ -186,7 +186,7 @@ int Create(bool isHidden, dmScript::LuaCallbackInfo* callback)
 void Destroy(int id)
 {
 	TextInputDelegate* textInput = g_TextInput.m_TextInputDelegates[id];
-	if (textInput && )
+	if (textInput)
 	{
 		if (textInput.focused)
 		{
@@ -369,5 +369,5 @@ void ClearFocus(int id)
 }
 
 } // namespace
-
+*/
 #endif // DM_PLATFORM_IOS
