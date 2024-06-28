@@ -4,7 +4,7 @@
 #include <dmsdk/sdk.h>
 #include "textinput_private.h"
 
-#if defined(DM_PLATFORM_ANDROID)
+#if defined(DM_PLATFORM_ANDROID) || defined(DM_PLATFORM_IOS)
 
 static int TextInput_Create(lua_State* L)
 {

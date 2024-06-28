@@ -1,95 +1,13 @@
 #if defined(DM_PLATFORM_IOS)
-/*
-// Please help to finish this for iOS platform.
-// Thanks!
 
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 #include "textinput_private.h"
 
-namespace dmTextInput {
 
-@interface TextInputDelegate
+struct TextInput
 {
-	@public UIKeyboardType keyboardType;
-	@public UITextAutocapitalizationType autocapitalizationType;
-	@public UIReturnKeyType returnKeyType;
-	@public BOOL secureTextEntry;
-	@public BOOL visible;
-	@public BOOL focused;
-	@public BOOL isHidden;
-}
-@end
-@implementation TextInputDelegate : UIViewController <UITextInputDelegate>
-- (void) refectKeyboard
-{
-	if (visible && focused)
-	{
-		if (isHidden)
-		{
-			BaseView* view = (BaseView*) _glfwWin.view;
-			view.secureTextEntry = secureTextEntry;
-			view.keyboardType = keyboardType;
-			view.autocapitalizationType = autocapitalizationType;
-			view.returnKeyType = returnKeyType;	
-		}
-		else
-		{
-			// 
-		}
-	}
-}
-- (void) setFocused: (BOOL)value
-{
-	if (visible)
-	{
-		focused = value;
-		if (focused) {
-			[self refectKeyboard];
-			if (isHidden)
-			{
-				BaseView* view = (BaseView*) _glfwWin.view;
-				view.autoCloseKeyboard = 0;
-				[view clearMarkedText];
-				[view becomeFirstResponder];
-			}
-			else
-			{
-				// 
-			}
-		} else {
-			if (isHidden)
-			{
-				BaseView* view = (BaseView*) _glfwWin.view;
-				[view resignFirstResponder];
-			}
-			else
-			{
-				// 
-			}
-		}
-	}
-}
-- (void) destroy
-{
-	if (focused)
-	{
-		[self setFocused:NO];
-	}
-	if (!isHidden)
-	{
-		// 
-	}
-}
-- (void)textDidChange:(id<UITextInput>)textInput
-{
-	// 
-}
-@end
-
-struct TextInputState
-{
-	TextInputState
+	TextInput
 	{
 		m_IdIncr = 0;
 		m_FocusingOn = -1;
@@ -97,12 +15,12 @@ struct TextInputState
 
 	int m_IdIncr;
 	int m_FocusingOn;
-	std::map<int,TextInputDelegate*>		 m_TextInputDelegates;
+	std::map<int,CTextInputHandler*>		 m_TextInputs;
 	std::map<int,dmScript::LuaCallbackInfo*> m_Listeners;
 	CommandQueue							 m_CommandQueue;
 };
 
-static TextInputState g_TextInput;
+static TextInput g_TextInput;
 
 static char* CopyString(NSString* s)
 {
@@ -110,6 +28,173 @@ static char* CopyString(NSString* s)
 	char* copy = strdup(osstring);
 	return copy;
 }
+
+
+@interface CTextInputHandler : NSObject <UITextFieldDelegate>
+UITextField view;
+@property (nonatomic, assign) int id;
+@property (nonatomic, assign) BOOL visible;
+@property (nonatomic, assign) BOOL isHidden;
+@property (nonatomic, assign) BOOL focused;
+@property (nonatomic, assign) int maxLength;
+
+- (void) initialize: (int) id isHidden:(BOOL) hidden;
+- (void) onTexChanged;
+- (void) onFocused;
+- (void) onUnfocused;
+- (void) onSubmit;
+- (void) setSecureTextEntry: (BOOL) value;
+- (void) setKeyboardType: (UIKeyboardType) type;
+- (void) setAutocapitalizationType: (UITextAutocapitalizationType) type;
+- (void) setReturnKeyType: (UIReturnKeyType) type;
+- (void) setFocused: (BOOL)value;
+- (void) setVisible: (BOOL)value;
+- (void) setMaxLength: (int)value;
+- (void) setFrame: (CGRect)frame;
+- (CGRect) getFrame;
+- (void) setText: (NSString*)text;
+- (NSString*) getText;
+- (void) destroy;
+@end
+
+@implementation CTextInputHandler
+- (void) initialize: (int) id isHidden:(BOOL) hidden
+{
+	self.view = [[UITextField alloc] initWithFrame:CGRectMake(0, 0, 0, 0)];
+	[view addTarget:self action:@selector(onTexChanged) forControlEvents:UIControlEventEditingChanged];
+	[view addTarget:self action:@selector(onFocused) forControlEvents:UIControlEventEditingDidBegin];
+	[view addTarget:self action:@selector(onUnfocused) forControlEvents:UIControlEventEditingDidEnd];
+	[view addTarget:self action:@selector(onSubmit) forControlEvents:UIControlEventEditingDidEndOnExit];
+	self.view.delegate = self;
+
+	self.id = id;
+	self.isHidden = hidden;
+	self.focused = NO;
+	self.maxLength = -1;
+
+	UIReturnKeyType returnKeyType = self.isHidden ? UIReturnKeyDone : UIReturnKeyDefault;
+	[self setKeyboardType:UIKeyboardTypeDefault];
+	[self setAutocapitalizationType:UITextAutocapitalizationTypeNone];
+	[self setReturnKeyType:returnKeyType];
+	[self setSecureTextEntry:NO];
+	[self setVisible:YES];
+}
+- (BOOL)textField:(UITextField *)view shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString*)string
+{
+    NSUInteger newLength = [view.text length] + [string length] - range.length;
+    return (maxLength != -1 && newLength > maxLength) ? NO : YES;
+}
+- (void) onTexChanged
+{
+	NSLog(@"text changed: %@", self.view.text);
+	Command cmd;
+	cmd.m_Command = EVENT_ON_TEXT_CHANGED;
+	cmd.m_Callback = g_TextInput.m_Listeners[self.id];
+	cmd.m_Data = CopyString(self.view.text);
+	dmTextInput::Queue_Push(&g_TextInput.m_CommandQueue, &cmd);
+}
+- (void) onFocused
+{
+	Command cmd;
+	cmd.m_Command = EVENT_ON_FOCUS_CHANGE;
+	cmd.m_Callback = g_TextInput.m_Listeners[self.id];
+	cmd.m_Data = (void*)"1";
+	dmTextInput::Queue_Push(&g_TextInput.m_CommandQueue, &cmd);
+}
+- (void) onUnfocused
+{
+	Command cmd;
+	cmd.m_Command = EVENT_ON_FOCUS_CHANGE;
+	cmd.m_Callback = g_TextInput.m_Listeners[self.id];
+	cmd.m_Data = (void*)"0";
+	dmTextInput::Queue_Push(&g_TextInput.m_CommandQueue, &cmd);
+}
+- (void) onSubmit
+{
+	Command cmd;
+	cmd.m_Command = EVENT_ON_SUBMIT;
+	cmd.m_Callback = g_TextInput.m_Listeners[self.id];
+	cmd.m_Data = CopyString(self.view.text);
+	dmTextInput::Queue_Push(&g_TextInput.m_CommandQueue, &cmd);
+	[view resignFirstResponder];
+}
+- (void) setSecureTextEntry: (BOOL) value
+{
+	self.view.secureTextEntry = value;
+}
+- (void) setKeyboardType: (UIKeyboardType) type
+{
+	self.view.keyboardType = type;
+}
+- (void) setAutocapitalizationType: (UITextAutocapitalizationType) type
+{
+	self.view.autocapitalizationType = type;
+}
+- (void) setReturnKeyType: (UIReturnKeyType) type
+{
+	self.view.returnKeyType = type;
+}
+- (void) setFocused: (BOOL)value
+{
+	if (self.visible)
+	{
+		if (value)
+		{
+			[view becomeFirstResponder];
+			g_TextInput.m_FocusingOn = self.id;
+		} else {
+			[view resignFirstResponder];
+			if (self.focused)
+			{
+				g_TextInput.m_FocusingOn = -1;
+			}
+		}
+		self.focused = value;
+	}
+}
+- (void) setVisible: (BOOL)value
+{
+	self.visible = value;
+	if (!value && self.focused)
+	{
+		[self setFocused:NO];
+	}
+}
+- (void) setMaxLength: (int)value
+{
+	maxLength = value;
+}
+- (void) setFrame: (CGRect)frame
+{
+	if (self.isHidden) return;
+	self.view.frame = frame;
+}
+- (CGRect) getFrame
+{
+	if (self.isHidden) return NULL;
+	return self.view.frame;
+}
+- (void) setText: (NSString*)text
+{
+	self.view.text = text;
+}
+- (NSString*) getText
+{
+	return self.view.text;
+}
+- (void) destroy
+{
+	if (self.focused)
+	{
+		[self setFocused:NO];
+	}
+	[view removeFromSuperview];
+    [view release];
+}
+@end
+
+
+namespace dmTextInput {
 
 void Initialize(dmExtension::Params* params)
 {
@@ -169,15 +254,10 @@ void Finalize()
 int Create(bool isHidden, dmScript::LuaCallbackInfo* callback)
 {
 	int id = g_TextInput.m_IdIncr++;
-	TextInputDelegate* textInput = [TextInputDelegate alloc];
-	textInput.keyboardType = UIKeyboardTypeDefault;
-	textInput.autocapitalizationType = UITextAutocapitalizationTypeNone;
-	textInput.returnKeyType = isHidden ? UIReturnKeyDone : UIReturnKeyDefault;
-	textInput.secureTextEntry = NO;
-	textInput.visible = YES;
-	textInput.focused = NO;
-	textInput.isHidden = isHidden ? YES : NO;
-	g_TextInput.m_TextInputDelegates[id] = textInput;
+	CTextInputHandler* textInput = [[CTextInputHandler alloc] init];
+	BOOL hidden = isHidden ? YES : NO;
+	[textInput initialize:id isHidden:hidden];
+	g_TextInput.m_TextInputs[id] = textInput;
 	g_TextInput.m_Listeners[id] = callback;
 
 	return id;
@@ -185,16 +265,12 @@ int Create(bool isHidden, dmScript::LuaCallbackInfo* callback)
 
 void Destroy(int id)
 {
-	TextInputDelegate* textInput = g_TextInput.m_TextInputDelegates[id];
+	CTextInputHandler* textInput = g_TextInput.m_TextInputs[id];
 	if (textInput)
 	{
-		if (textInput.focused)
-		{
-			g_TextInput.m_FocusingOn = -1;
-		}
 		[textInput destroy];
 	}
-	g_TextInput.m_TextInputDelegates[id] = NULL;
+	g_TextInput.m_TextInputs[id] = NULL;
 	dmScript::LuaCallbackInfo* callback = g_TextInput.m_Listeners[id];
 	if (callback != 0)
 	{
@@ -205,15 +281,11 @@ void Destroy(int id)
 
 void SetVisible(int id, bool visible)
 {
-	TextInputDelegate* textInput = g_TextInput.m_TextInputDelegates[id];
+	CTextInputHandler* textInput = g_TextInput.m_TextInputs[id];
 	if (textInput)
 	{
-		textInput->visible = visible ? YES : NO;
-		if (!textInput->visible && textInput->focused)
-		{
-			[textInput setFocused:NO];
-			g_TextInput.m_FocusingOn = -1;
-		}
+		BOOL value = visible ? YES : NO;
+		[textInput setVisible:value];
 	}
 }
 
@@ -227,6 +299,8 @@ void SetHintTextColor(int id, const char* color)
 
 void SetText(int id, const char* text)
 {
+	NSString* t = [NSString stringWithUTF8String:text];
+	[textInput setText:t]
 }
 
 void SetTextColor(int id, const char* color)
@@ -239,135 +313,143 @@ void SetTextSize(int id, int size)
 
 void SetPosition(int id, int x, int y)
 {
+	CTextInputHandler* textInput = g_TextInput.m_TextInputs[id];
+	if (textInput && !textInput.isHidden)
+	{
+		CGRect frame = [textInput getFrame];
+		frame.origin.x = x;
+		frame.origin.y = y;
+		[textInput setFrame:frame];
+	}
 }
 
 void SetSize(int id, int width, int height)
 {
+	CTextInputHandler* textInput = g_TextInput.m_TextInputs[id];
+	if (textInput && !textInput.isHidden)
+	{
+		CGRect frame = [textInput getFrame];
+		frame.size.width = width;
+		frame.size.height = height;
+		[textInput setFrame:frame];
+	}
 }
 
 void SetMaxLength(int id, int maxLength)
 {
+	CTextInputHandler* textInput = g_TextInput.m_TextInputs[id];
+	if (textInput)
+	{
+		[textInput setMaxLength:maxLength];
+	}
 }
 
 void SetKeyboardType(int id, KeyboardType keyboardType)
 {
-	TextInputDelegate* textInput = g_TextInput.m_TextInputDelegates[id];
+	CTextInputHandler* textInput = g_TextInput.m_TextInputs[id];
 	if (textInput)
 	{
 		switch (keyboardType) {
-			case KEYBOARD_TYPE_DEFAULT:
-				textInput.secureTextEntry = NO;
-				textInput.keyboardType = UIKeyboardTypeDefault;
-				break;
 			case KEYBOARD_TYPE_NUMBER_PAD:
-				textInput.secureTextEntry = NO;
-				textInput.keyboardType = UIKeyboardTypeNumberPad;
+				[textInput setSecureTextEntry:NO];
+				[textInput setKeyboardType:UIKeyboardTypeNumberPad];
 				break;
 			case KEYBOARD_TYPE_EMAIL:
-				textInput.secureTextEntry = NO;
-				textInput.keyboardType = UIKeyboardTypeEmailAddress;
+				[textInput setSecureTextEntry:NO];
+				[textInput setKeyboardType:UIKeyboardTypeEmailAddress];
 				break;
 			case KEYBOARD_TYPE_PASSWORD:
-				textInput.secureTextEntry = YES;
-				textInput.keyboardType = UIKeyboardTypeDefault;
+				[textInput setSecureTextEntry:YES];
+				[textInput setKeyboardType:UIKeyboardTypeDefault];
 				break;
 			default:
-				textInput.secureTextEntry = NO;
-				textInput.keyboardType = UIKeyboardTypeDefault;
-		}
-		if (textInput.focused)
-		{
-			[textInput refectKeyboard];
+				[textInput setSecureTextEntry:NO];
+				[textInput setKeyboardType:UIKeyboardTypeDefault];
 		}
 	}
 }
 
 void SetAutoCapitalize(int id, Capitalize autoCapitalize)
 {
-	TextInputDelegate* textInput = g_TextInput.m_TextInputDelegates[id];
+	CTextInputHandler* textInput = g_TextInput.m_TextInputs[id];
 	if (textInput)
 	{
 		switch (autoCapitalize) {
 			case CAPITALIZE_SENTENCES:
-				textInput.autocapitalizationType = UITextAutocapitalizationTypeSentences;
+				[textInput setAutocapitalizationType:UITextAutocapitalizationTypeSentences];
 				break;
 			case CAPITALIZE_WORDS:
-				textInput.autocapitalizationType = UITextAutocapitalizationTypeWords;
+				[textInput setAutocapitalizationType:UITextAutocapitalizationTypeWords];
 				break;
 			case CAPITALIZE_CHARACTERS:
-				textInput.autocapitalizationType = UITextAutocapitalizationTypeAllCharacters;
+				[textInput setAutocapitalizationType:UITextAutocapitalizationTypeAllCharacters];
 				break;
 			default:
-				textInput.autocapitalizationType = UITextAutocapitalizationTypeNone;
-		}
-		if (textInput.focused)
-		{
-			[textInput refectKeyboard];
+				[textInput setAutocapitalizationType:UITextAutocapitalizationTypeNone];
 		}
 	}
 }
 
 void SetReturnKeyType(int id, ReturnKeyType returnKeyType)
 {
-	TextInputDelegate* textInput = g_TextInput.m_TextInputDelegates[id];
+	CTextInputHandler* textInput = g_TextInput.m_TextInputs[id];
 	if (textInput)
 	{
 		switch (returnKeyType) {
 			case RETURN_KEY_TYPE_DONE:
-				textInput.returnKeyType = UIReturnKeyDone;
+				[textInput setReturnKeyType:UIReturnKeyDone];
 				break;
 			case RETURN_KEY_TYPE_GO:
-				textInput.returnKeyType = UIReturnKeyGo;
+				[textInput setReturnKeyType:UIReturnKeyGo];
 				break;
 			case RETURN_KEY_TYPE_NEXT:
-				textInput.returnKeyType = UIReturnKeyNext;
+				[textInput setReturnKeyType:UIReturnKeyNext];
 				break;
 			case RETURN_KEY_TYPE_SEARCH:
-				textInput.returnKeyType = UIReturnKeySearch;
+				[textInput setReturnKeyType:UIReturnKeySearch];
 				break;
 			case RETURN_KEY_TYPE_SEND:
-				textInput.returnKeyType = UIReturnKeySend;
+				[textInput setReturnKeyType:UIReturnKeySend];
 				break;
 			default:
-				textInput.returnKeyType = UIReturnKeyDefault;
-		}
-		if (textInput.focused)
-		{
-			[textInput refectKeyboard];
+				[textInput setReturnKeyType:UIReturnKeyDefault];
 		}
 	}
 }
 
 const char* GetText(int id)
 {
-	NSString* return_value = "";
-	return CopyString(return_value);
+	CTextInputHandler* textInput = g_TextInput.m_TextInputs[id];
+	if (textInput)
+	{
+		NSString* text = [textInput getText];
+		return CopyString(text);
+	}
+	return NULL;
 }
 
 void Focus(int id)
 {
-	TextInputDelegate* textInput = g_TextInput.m_TextInputDelegates[id];
+	CTextInputHandler* textInput = g_TextInput.m_TextInputs[id];
 	if (textInput && !textInput.focused)
 		if (g_TextInput.m_FocusingOn != -1)
 		{
-			TextInputDelegate* focusingTextInput = g_TextInput.m_TextInputDelegates[g_TextInput.m_FocusingOn];
-			focusingTextInput.focused = NO;
+			CTextInputHandler* focusingTextInput = g_TextInput.m_TextInputs[g_TextInput.m_FocusingOn];
+			[textInput setFocused:NO];
 		}
 		[textInput setFocused:YES];
-		g_TextInput.m_FocusingOn = id;
 	}
 }
 
 void ClearFocus(int id)
 {
-	TextInputDelegate* textInput = g_TextInput.m_TextInputDelegates[id];
+	CTextInputHandler* textInput = g_TextInput.m_TextInputs[id];
 	if (textInput && textInput.focused)
 	{
 		[textInput setFocused:NO];
-		g_TextInput.m_FocusingOn = -1;
 	}
 }
 
 } // namespace
-*/
+
 #endif // DM_PLATFORM_IOS
