@@ -13,8 +13,16 @@ local function clear_focus(self)
 end
 
 local function create_textinput1(self)
-	local id = textinput.create(true, function(_, ev, data)
-		if ev == textinput.EVENT_ON_TEXT_CHANGED then
+	local id = nil
+	id = textinput.create(true, function(_, ev, data)
+		if ev == textinput.EVENT_ON_FOCUS_CHANGE then
+			if data == true then
+				gui.set_text(gui.get_node("text1"), textinput.get_text(id))
+				gui.set_color(gui.get_node("box1"), vmath.vector4(0.6, 0.6, 0.6, 1))
+			else
+				gui.set_color(gui.get_node("box1"), vmath.vector4(0.4, 0.4, 0.4, 1))
+			end
+		elseif ev == textinput.EVENT_ON_TEXT_CHANGED then
 			gui.set_text(gui.get_node("text1"), data)
 		elseif ev == textinput.EVENT_ON_SUBMIT then
 			focus(self, self.id2)
@@ -26,8 +34,16 @@ local function create_textinput1(self)
 end
 
 local function create_textinput2(self)
-	local id = textinput.create(true, function(_, ev, data)
-		if ev == textinput.EVENT_ON_TEXT_CHANGED then
+	local id = nil
+	id = textinput.create(true, function(_, ev, data)
+		if ev == textinput.EVENT_ON_FOCUS_CHANGE then
+			if data == true then
+				gui.set_text(gui.get_node("text2"), textinput.get_text(id))
+				gui.set_color(gui.get_node("box2"), vmath.vector4(0.6, 0.6, 0.6, 1))
+			else
+				gui.set_color(gui.get_node("box2"), vmath.vector4(0.4, 0.4, 0.4, 1))
+			end
+		elseif ev == textinput.EVENT_ON_TEXT_CHANGED then
 			gui.set_text(gui.get_node("text2"), data)
 		end
 	end)
@@ -36,7 +52,8 @@ local function create_textinput2(self)
 end
 
 local function create_textinput3(self)
-	local id = textinput.create(false, function(_, ev, data)
+	local id = nil
+	id = textinput.create(false, function(_, ev, data)
 	end)
 	textinput.set_hint(id, "Enter here...")
 	textinput.set_hint_text_color(id, "#ff0000")

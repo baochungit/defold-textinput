@@ -39,10 +39,13 @@ embedded_instances {
   "embedded_components {\n"
   "  id: \"logo\"\n"
   "  type: \"sprite\"\n"
-  "  data: \"tile_set: \\\"/example/main.atlas\\\"\\n"
-  "default_animation: \\\"icon_180\\\"\\n"
+  "  data: \"default_animation: \\\"icon_180\\\"\\n"
   "material: \\\"/builtins/materials/sprite.material\\\"\\n"
   "blend_mode: BLEND_MODE_ALPHA\\n"
+  "textures {\\n"
+  "  sampler: \\\"texture_sampler\\\"\\n"
+  "  texture: \\\"/example/main.atlas\\\"\\n"
+  "}\\n"
   "\"\n"
   "  position {\n"
   "    x: 0.0\n"
@@ -59,10 +62,13 @@ embedded_instances {
   "embedded_components {\n"
   "  id: \"background\"\n"
   "  type: \"sprite\"\n"
-  "  data: \"tile_set: \\\"/example/main.atlas\\\"\\n"
-  "default_animation: \\\"background\\\"\\n"
+  "  data: \"default_animation: \\\"background\\\"\\n"
   "material: \\\"/builtins/materials/sprite.material\\\"\\n"
   "blend_mode: BLEND_MODE_ALPHA\\n"
+  "textures {\\n"
+  "  sampler: \\\"texture_sampler\\\"\\n"
+  "  texture: \\\"/example/main.atlas\\\"\\n"
+  "}\\n"
   "\"\n"
   "  position {\n"
   "    x: 0.0\n"
@@ -74,6 +80,11 @@ embedded_instances {
   "    y: 0.0\n"
   "    z: 0.0\n"
   "    w: 1.0\n"
+  "  }\n"
+  "  scale {\n"
+  "    x: 2.0\n"
+  "    y: 2.0\n"
+  "    z: 1.0\n"
   "  }\n"
   "}\n"
   "embedded_components {\n"
@@ -132,7 +143,7 @@ embedded_instances {
   ""
   position {
     x: 320.0
-    y: 568.0
+    y: 620.0
     z: 0.0
   }
   rotation {

@@ -12,7 +12,7 @@ background_color {
 nodes {
   position {
     x: 320.0
-    y: 669.0
+    y: 601.0
     z: 0.0
     w: 1.0
   }
@@ -137,7 +137,7 @@ nodes {
 nodes {
   position {
     x: 320.0
-    y: 582.0
+    y: 514.0
     z: 0.0
     w: 1.0
   }
@@ -181,7 +181,7 @@ nodes {
     z: 0.0
     w: 0.0
   }
-  clipping_mode: CLIPPING_MODE_NONE
+  clipping_mode: CLIPPING_MODE_STENCIL
   clipping_visible: true
   clipping_inverted: false
   alpha: 1.0
@@ -262,7 +262,7 @@ nodes {
 nodes {
   position {
     x: 320.0
-    y: 464.0
+    y: 770.0
     z: 0.0
     w: 1.0
   }
@@ -285,9 +285,9 @@ nodes {
     w: 1.0
   }
   color {
-    x: 0.4
+    x: 0.6
     y: 0.4
-    z: 0.4
+    z: 0.0
     w: 1.0
   }
   type: TYPE_BOX
@@ -306,7 +306,7 @@ nodes {
     z: 0.0
     w: 0.0
   }
-  clipping_mode: CLIPPING_MODE_NONE
+  clipping_mode: CLIPPING_MODE_STENCIL
   clipping_visible: true
   clipping_inverted: false
   alpha: 1.0
