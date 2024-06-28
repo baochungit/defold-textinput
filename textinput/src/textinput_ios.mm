@@ -33,7 +33,6 @@ static char* CopyString(NSString* s)
 @interface CTextInputHandler : NSObject <UITextFieldDelegate>
 UITextField view;
 @property (nonatomic, assign) int id;
-@property (nonatomic, assign) BOOL visible;
 @property (nonatomic, assign) BOOL isHidden;
 @property (nonatomic, assign) BOOL focused;
 @property (nonatomic, assign) int maxLength;
@@ -136,7 +135,7 @@ UITextField view;
 }
 - (void) setFocused: (BOOL)value
 {
-	if (self.visible)
+	if (!self.view.hidden)
 	{
 		if (value)
 		{
@@ -154,11 +153,11 @@ UITextField view;
 }
 - (void) setVisible: (BOOL)value
 {
-	self.visible = value;
 	if (!value && self.focused)
 	{
 		[self setFocused:NO];
 	}
+	self.view.hidden = !value;
 }
 - (void) setMaxLength: (int)value
 {
