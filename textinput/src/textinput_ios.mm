@@ -85,7 +85,7 @@ UITextField view;
 - (BOOL)textField:(UITextField *)view shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString*)string
 {
     NSUInteger newLength = [view.text length] + [string length] - range.length;
-    return (maxLength != -1 && newLength > maxLength) ? NO : YES;
+    return (self.maxLength != -1 && newLength > self.maxLength) ? NO : YES;
 }
 
 - (void)onTexChanged
@@ -176,7 +176,7 @@ UITextField view;
 
 - (void)setMaxLength:(int)value
 {
-	maxLength = value;
+	self.maxLength = value;
 }
 
 - (void)setFrame:(CGRect)frame
