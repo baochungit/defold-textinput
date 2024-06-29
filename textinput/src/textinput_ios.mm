@@ -30,34 +30,37 @@ static char* CopyString(NSString* s)
 }
 
 
-@interface CTextInputHandler : NSObject <UITextFieldDelegate>
+@interface CTextInputHandler : NSObject<UITextFieldDelegate>
+
 UITextField view;
 @property (nonatomic, assign) int id;
 @property (nonatomic, assign) BOOL isHidden;
 @property (nonatomic, assign) BOOL focused;
 @property (nonatomic, assign) int maxLength;
 
-- (void) initialize: (int) id isHidden:(BOOL) hidden;
-- (void) onTexChanged;
-- (void) onFocused;
-- (void) onUnfocused;
-- (void) onSubmit;
-- (void) setSecureTextEntry: (BOOL) value;
-- (void) setKeyboardType: (UIKeyboardType) type;
-- (void) setAutocapitalizationType: (UITextAutocapitalizationType) type;
-- (void) setReturnKeyType: (UIReturnKeyType) type;
-- (void) setFocused: (BOOL)value;
-- (void) setVisible: (BOOL)value;
-- (void) setMaxLength: (int)value;
-- (void) setFrame: (CGRect)frame;
-- (CGRect) getFrame;
-- (void) setText: (NSString*)text;
-- (NSString*) getText;
-- (void) destroy;
+- (void)initialize:(int)id isHidden:(BOOL)hidden;
+- (void)onTexChanged;
+- (void)onFocused;
+- (void)onUnfocused;
+- (void)onSubmit;
+- (void)setSecureTextEntry:(BOOL)value;
+- (void)setKeyboardType:(UIKeyboardType)type;
+- (void)setAutocapitalizationType:(UITextAutocapitalizationType)type;
+- (void)setReturnKeyType:(UIReturnKeyType)type;
+- (void)setFocused:(BOOL)value;
+- (void)setVisible:(BOOL)value;
+- (void)setMaxLength:(int)value;
+- (void)setFrame:(CGRect)frame;
+- (CGRect)getFrame;
+- (void)setText:(NSString*)text;
+- (NSString*)getText;
+- (void)destroy;
+
 @end
 
 @implementation CTextInputHandler
-- (void) initialize: (int) id isHidden:(BOOL) hidden
+
+- (void)initialize:(int)id isHidden:(BOOL)hidden
 {
 	self.view = [[UITextField alloc] initWithFrame:CGRectMake(0, 0, 0, 0)];
 	[view addTarget:self action:@selector(onTexChanged) forControlEvents:UIControlEventEditingChanged];
@@ -78,12 +81,14 @@ UITextField view;
 	[self setSecureTextEntry:NO];
 	[self setVisible:YES];
 }
+
 - (BOOL)textField:(UITextField *)view shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString*)string
 {
     NSUInteger newLength = [view.text length] + [string length] - range.length;
     return (maxLength != -1 && newLength > maxLength) ? NO : YES;
 }
-- (void) onTexChanged
+
+- (void)onTexChanged
 {
 	NSLog(@"text changed: %@", self.view.text);
 	Command cmd;
@@ -92,7 +97,8 @@ UITextField view;
 	cmd.m_Data = CopyString(self.view.text);
 	dmTextInput::Queue_Push(&g_TextInput.m_CommandQueue, &cmd);
 }
-- (void) onFocused
+
+- (void)onFocused
 {
 	Command cmd;
 	cmd.m_Command = EVENT_ON_FOCUS_CHANGE;
@@ -100,7 +106,8 @@ UITextField view;
 	cmd.m_Data = (void*)"1";
 	dmTextInput::Queue_Push(&g_TextInput.m_CommandQueue, &cmd);
 }
-- (void) onUnfocused
+
+- (void)onUnfocused
 {
 	Command cmd;
 	cmd.m_Command = EVENT_ON_FOCUS_CHANGE;
@@ -108,7 +115,8 @@ UITextField view;
 	cmd.m_Data = (void*)"0";
 	dmTextInput::Queue_Push(&g_TextInput.m_CommandQueue, &cmd);
 }
-- (void) onSubmit
+
+- (void)onSubmit
 {
 	Command cmd;
 	cmd.m_Command = EVENT_ON_SUBMIT;
@@ -117,23 +125,28 @@ UITextField view;
 	dmTextInput::Queue_Push(&g_TextInput.m_CommandQueue, &cmd);
 	[view resignFirstResponder];
 }
-- (void) setSecureTextEntry: (BOOL) value
+
+- (void)setSecureTextEntry:(BOOL)value
 {
 	self.view.secureTextEntry = value;
 }
-- (void) setKeyboardType: (UIKeyboardType) type
+
+- (void)setKeyboardType:(UIKeyboardType)type
 {
 	self.view.keyboardType = type;
 }
-- (void) setAutocapitalizationType: (UITextAutocapitalizationType) type
+
+- (void)setAutocapitalizationType:(UITextAutocapitalizationType)type
 {
 	self.view.autocapitalizationType = type;
 }
-- (void) setReturnKeyType: (UIReturnKeyType) type
+
+- (void)setReturnKeyType:(UIReturnKeyType)type
 {
 	self.view.returnKeyType = type;
 }
-- (void) setFocused: (BOOL)value
+
+- (void)setFocused:(BOOL)value
 {
 	if (!self.view.hidden)
 	{
@@ -151,7 +164,8 @@ UITextField view;
 		self.focused = value;
 	}
 }
-- (void) setVisible: (BOOL)value
+
+- (void)setVisible:(BOOL)value
 {
 	if (!value && self.focused)
 	{
@@ -159,29 +173,35 @@ UITextField view;
 	}
 	self.view.hidden = !value;
 }
-- (void) setMaxLength: (int)value
+
+- (void)setMaxLength:(int)value
 {
 	maxLength = value;
 }
-- (void) setFrame: (CGRect)frame
+
+- (void)setFrame:(CGRect)frame
 {
 	if (self.isHidden) return;
 	self.view.frame = frame;
 }
-- (CGRect) getFrame
+
+- (CGRect)getFrame
 {
 	if (self.isHidden) return NULL;
 	return self.view.frame;
 }
-- (void) setText: (NSString*)text
+
+- (void)setText:(NSString*)text
 {
 	self.view.text = text;
 }
-- (NSString*) getText
+
+- (NSString*)getText
 {
 	return self.view.text;
 }
-- (void) destroy
+
+- (void)destroy
 {
 	if (self.focused)
 	{
@@ -190,6 +210,7 @@ UITextField view;
 	[view removeFromSuperview];
     [view release];
 }
+
 @end
 
 
