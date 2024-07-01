@@ -68,6 +68,8 @@ UITextField view;
 	[view addTarget:self action:@selector(onUnfocused) forControlEvents:UIControlEventEditingDidEnd];
 	[view addTarget:self action:@selector(onSubmit) forControlEvents:UIControlEventEditingDidEndOnExit];
 	self.view.delegate = self;
+	UIView * topView = [[[[UIApplication sharedApplication] keyWindow] rootViewController] view];
+	[topView addSubview:view];
 
 	self.id = id;
 	self.isHidden = hidden;
