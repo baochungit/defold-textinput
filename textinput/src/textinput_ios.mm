@@ -2,12 +2,15 @@
 
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
+
+#include <map>
+#include <string.h>
 #include "textinput_private.h"
 
-
+@class CTextInputHandler;
 struct TextInput
 {
-	TextInput
+	TextInput()
 	{
 		m_IdIncr = 0;
 		m_FocusingOn = -1;
@@ -17,7 +20,7 @@ struct TextInput
 	int m_FocusingOn;
 	std::map<int,CTextInputHandler*>		 m_TextInputs;
 	std::map<int,dmScript::LuaCallbackInfo*> m_Listeners;
-	CommandQueue							 m_CommandQueue;
+	dmTextInput::CommandQueue				 m_CommandQueue;
 };
 
 static TextInput g_TextInput;
@@ -32,7 +35,6 @@ static char* CopyString(NSString* s)
 
 @interface CTextInputHandler : NSObject<UITextFieldDelegate>
 
-UITextField view;
 @property (nonatomic, assign) int id;
 @property (nonatomic, assign) BOOL isHidden;
 @property (nonatomic, assign) BOOL focused;
@@ -58,18 +60,23 @@ UITextField view;
 
 @end
 
-@implementation CTextInputHandler
+
+
+@implementation CTextInputHandler{
+
+	UITextField* _view;
+}
 
 - (void)initialize:(int)id isHidden:(BOOL)hidden
 {
-	self.view = [[UITextField alloc] initWithFrame:CGRectMake(0, 0, 0, 0)];
-	[view addTarget:self action:@selector(onTexChanged) forControlEvents:UIControlEventEditingChanged];
-	[view addTarget:self action:@selector(onFocused) forControlEvents:UIControlEventEditingDidBegin];
-	[view addTarget:self action:@selector(onUnfocused) forControlEvents:UIControlEventEditingDidEnd];
-	[view addTarget:self action:@selector(onSubmit) forControlEvents:UIControlEventEditingDidEndOnExit];
-	self.view.delegate = self;
+	_view = [[UITextField alloc] initWithFrame:CGRectMake(0, 0, 0, 0)];
+	[_view addTarget:self action:@selector(onTexChanged) forControlEvents:UIControlEventEditingChanged];
+	[_view addTarget:self action:@selector(onFocused) forControlEvents:UIControlEventEditingDidBegin];
+	[_view addTarget:self action:@selector(onUnfocused) forControlEvents:UIControlEventEditingDidEnd];
+	[_view addTarget:self action:@selector(onSubmit) forControlEvents:UIControlEventEditingDidEndOnExit];
+	_view.delegate = self;
 	UIView * topView = [[[[UIApplication sharedApplication] keyWindow] rootViewController] view];
-	[topView addSubview:view];
+	[topView addSubview:_view];
 
 	self.id = id;
 	self.isHidden = hidden;
@@ -86,24 +93,24 @@ UITextField view;
 
 - (BOOL)textField:(UITextField *)view shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString*)string
 {
-    NSUInteger newLength = [view.text length] + [string length] - range.length;
+    NSUInteger newLength = [_view.text length] + [string length] - range.length;
     return (self.maxLength != -1 && newLength > self.maxLength) ? NO : YES;
 }
 
 - (void)onTexChanged
 {
-	NSLog(@"text changed: %@", self.view.text);
-	Command cmd;
-	cmd.m_Command = EVENT_ON_TEXT_CHANGED;
+	NSLog(@"text changed: %@", _view.text);
+	dmTextInput::Command cmd;
+	cmd.m_Command = dmTextInput::EVENT_ON_TEXT_CHANGED;
 	cmd.m_Callback = g_TextInput.m_Listeners[self.id];
-	cmd.m_Data = CopyString(self.view.text);
+	cmd.m_Data = CopyString(_view.text);
 	dmTextInput::Queue_Push(&g_TextInput.m_CommandQueue, &cmd);
 }
 
 - (void)onFocused
 {
-	Command cmd;
-	cmd.m_Command = EVENT_ON_FOCUS_CHANGE;
+	dmTextInput::Command cmd;
+	cmd.m_Command = dmTextInput::EVENT_ON_FOCUS_CHANGE;
 	cmd.m_Callback = g_TextInput.m_Listeners[self.id];
 	cmd.m_Data = (void*)"1";
 	dmTextInput::Queue_Push(&g_TextInput.m_CommandQueue, &cmd);
@@ -111,8 +118,8 @@ UITextField view;
 
 - (void)onUnfocused
 {
-	Command cmd;
-	cmd.m_Command = EVENT_ON_FOCUS_CHANGE;
+	dmTextInput::Command cmd;
+	cmd.m_Command = dmTextInput::EVENT_ON_FOCUS_CHANGE;
 	cmd.m_Callback = g_TextInput.m_Listeners[self.id];
 	cmd.m_Data = (void*)"0";
 	dmTextInput::Queue_Push(&g_TextInput.m_CommandQueue, &cmd);
@@ -120,44 +127,44 @@ UITextField view;
 
 - (void)onSubmit
 {
-	Command cmd;
-	cmd.m_Command = EVENT_ON_SUBMIT;
+	dmTextInput::Command cmd;
+	cmd.m_Command = dmTextInput::EVENT_ON_SUBMIT;
 	cmd.m_Callback = g_TextInput.m_Listeners[self.id];
-	cmd.m_Data = CopyString(self.view.text);
+	cmd.m_Data = CopyString(_view.text);
 	dmTextInput::Queue_Push(&g_TextInput.m_CommandQueue, &cmd);
-	[view resignFirstResponder];
+	[_view resignFirstResponder];
 }
 
 - (void)setSecureTextEntry:(BOOL)value
 {
-	self.view.secureTextEntry = value;
+	_view.secureTextEntry = value;
 }
 
 - (void)setKeyboardType:(UIKeyboardType)type
 {
-	self.view.keyboardType = type;
+	_view.keyboardType = type;
 }
 
 - (void)setAutocapitalizationType:(UITextAutocapitalizationType)type
 {
-	self.view.autocapitalizationType = type;
+	_view.autocapitalizationType = type;
 }
 
 - (void)setReturnKeyType:(UIReturnKeyType)type
 {
-	self.view.returnKeyType = type;
+	_view.returnKeyType = type;
 }
 
 - (void)setFocused:(BOOL)value
 {
-	if (!self.view.hidden)
+	if (!_view.hidden)
 	{
 		if (value)
 		{
-			[view becomeFirstResponder];
+			[_view becomeFirstResponder];
 			g_TextInput.m_FocusingOn = self.id;
 		} else {
-			[view resignFirstResponder];
+			[_view resignFirstResponder];
 			if (self.focused)
 			{
 				g_TextInput.m_FocusingOn = -1;
@@ -173,7 +180,7 @@ UITextField view;
 	{
 		[self setFocused:NO];
 	}
-	self.view.hidden = !value;
+	_view.hidden = !value;
 }
 
 - (void)setMaxLength:(int)value
@@ -184,23 +191,25 @@ UITextField view;
 - (void)setFrame:(CGRect)frame
 {
 	if (self.isHidden) return;
-	self.view.frame = frame;
+	_view.frame = frame;
 }
 
 - (CGRect)getFrame
 {
-	if (self.isHidden) return NULL;
-	return self.view.frame;
+	if (self.isHidden) 
+		return CGRectMake(0,0,0,0);
+	
+	return _view.frame;
 }
 
 - (void)setText:(NSString*)text
 {
-	self.view.text = text;
+	_view.text = text;
 }
 
 - (NSString*)getText
 {
-	return self.view.text;
+	return _view.text;
 }
 
 - (void)destroy
@@ -209,8 +218,8 @@ UITextField view;
 	{
 		[self setFocused:NO];
 	}
-	[view removeFromSuperview];
-    [view release];
+	[_view removeFromSuperview];
+    [_view release];
 }
 
 @end
@@ -321,8 +330,10 @@ void SetHintTextColor(int id, const char* color)
 
 void SetText(int id, const char* text)
 {
+	CTextInputHandler* textInput = g_TextInput.m_TextInputs[id];
+	
 	NSString* t = [NSString stringWithUTF8String:text];
-	[textInput setText:t]
+	[textInput setText:t];
 }
 
 void SetTextColor(int id, const char* color)
@@ -454,6 +465,7 @@ void Focus(int id)
 {
 	CTextInputHandler* textInput = g_TextInput.m_TextInputs[id];
 	if (textInput && !textInput.focused)
+	{
 		if (g_TextInput.m_FocusingOn != -1)
 		{
 			CTextInputHandler* focusingTextInput = g_TextInput.m_TextInputs[g_TextInput.m_FocusingOn];
