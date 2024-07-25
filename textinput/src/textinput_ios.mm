@@ -7,6 +7,7 @@
 #include <string.h>
 #include "textinput_private.h"
 
+
 @class CTextInputHandler;
 struct TextInput
 {
@@ -35,16 +36,13 @@ static char* CopyString(NSString* s)
 
 @interface CTextInputHandler : NSObject<UITextFieldDelegate>
 
-@property (nonatomic, assign) int id;
 @property (nonatomic, assign) BOOL isHidden;
-@property (nonatomic, assign) BOOL focused;
-@property (nonatomic, assign) int maxLength;
+@property (nonatomic, assign) BOOL isFocused;
+@property (nonatomic, assign) int maximumLength;
+@property (nonatomic, assign) NSString* placeholderText;
+@property (nonatomic, assign) NSString* placeholderTextColor;
 
 - (void)initialize:(int)id isHidden:(BOOL)hidden;
-- (void)onTexChanged;
-- (void)onFocused;
-- (void)onUnfocused;
-- (void)onSubmit;
 - (void)setSecureTextEntry:(BOOL)value;
 - (void)setKeyboardType:(UIKeyboardType)type;
 - (void)setAutocapitalizationType:(UITextAutocapitalizationType)type;
@@ -56,32 +54,37 @@ static char* CopyString(NSString* s)
 - (CGRect)getFrame;
 - (void)setText:(NSString*)text;
 - (NSString*)getText;
+- (void)setHintText:(NSString*)text;
+- (void)setHintTextColor:(NSString*)value;
+- (void)setTextColor:(NSString*)value;
+- (void)setTextSize:(int)value;
 - (void)destroy;
 
 @end
 
 
-
 @implementation CTextInputHandler{
-
-	UITextField* _view;
+	UITextField* _field;
 }
 
 - (void)initialize:(int)id isHidden:(BOOL)hidden
 {
-	_view = [[UITextField alloc] initWithFrame:CGRectMake(0, 0, 0, 0)];
-	[_view addTarget:self action:@selector(onTexChanged) forControlEvents:UIControlEventEditingChanged];
-	[_view addTarget:self action:@selector(onFocused) forControlEvents:UIControlEventEditingDidBegin];
-	[_view addTarget:self action:@selector(onUnfocused) forControlEvents:UIControlEventEditingDidEnd];
-	[_view addTarget:self action:@selector(onSubmit) forControlEvents:UIControlEventEditingDidEndOnExit];
-	_view.delegate = self;
+	_field = [[UITextField alloc] initWithFrame:CGRectMake(0, -100, 0, 0)];
+	[_field addTarget:self action:@selector(onTextChanged:) forControlEvents:UIControlEventEditingChanged];
+	[_field addTarget:self action:@selector(onFocused:) forControlEvents:UIControlEventEditingDidBegin];
+	[_field addTarget:self action:@selector(onUnfocused:) forControlEvents:UIControlEventEditingDidEnd];
+	[_field addTarget:self action:@selector(onSubmit:) forControlEvents:UIControlEventEditingDidEndOnExit];
+	_field.delegate = self;
 	UIView * topView = [[[[UIApplication sharedApplication] keyWindow] rootViewController] view];
-	[topView addSubview:_view];
+	[topView addSubview:_field];
 
-	self.id = id;
+	_field.tag = id;
+
 	self.isHidden = hidden;
-	self.focused = NO;
-	self.maxLength = -1;
+	self.isFocused = NO;
+	self.placeholderText = @"";
+	self.placeholderTextColor = @"#000000";
+	self.maximumLength = -1;
 
 	UIReturnKeyType returnKeyType = self.isHidden ? UIReturnKeyDone : UIReturnKeyDefault;
 	[self setKeyboardType:UIKeyboardTypeDefault];
@@ -91,135 +94,188 @@ static char* CopyString(NSString* s)
 	[self setVisible:YES];
 }
 
-- (BOOL)textField:(UITextField *)view shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString*)string
-{
-    NSUInteger newLength = [_view.text length] + [string length] - range.length;
-    return (self.maxLength != -1 && newLength > self.maxLength) ? NO : YES;
+- (BOOL)textField:(UITextField *)textField shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString *)string{
+	NSString *str = textField.text;
+	str = [str stringByReplacingCharactersInRange:range withString:string];
+	return (self.maximumLength != -1 && str.length > self.maximumLength) ? NO : YES;
 }
 
-- (void)onTexChanged
+- (BOOL)textFieldShouldReturn:(UITextField*)textField{
+	return true;
+}
+
+- (void)onTextChanged:(UITextField*)textField
 {
-	NSLog(@"text changed: %@", _view.text);
 	dmTextInput::Command cmd;
 	cmd.m_Command = dmTextInput::EVENT_ON_TEXT_CHANGED;
-	cmd.m_Callback = g_TextInput.m_Listeners[self.id];
-	cmd.m_Data = CopyString(_view.text);
+	cmd.m_Callback = g_TextInput.m_Listeners[textField.tag];
+	cmd.m_Data = CopyString(_field.text);
 	dmTextInput::Queue_Push(&g_TextInput.m_CommandQueue, &cmd);
 }
 
-- (void)onFocused
+- (void)onFocused:(UITextField*)textField
 {
 	dmTextInput::Command cmd;
 	cmd.m_Command = dmTextInput::EVENT_ON_FOCUS_CHANGE;
-	cmd.m_Callback = g_TextInput.m_Listeners[self.id];
+	cmd.m_Callback = g_TextInput.m_Listeners[textField.tag];
 	cmd.m_Data = (void*)"1";
 	dmTextInput::Queue_Push(&g_TextInput.m_CommandQueue, &cmd);
 }
 
-- (void)onUnfocused
+- (void)onUnfocused:(UITextField*)textField
 {
 	dmTextInput::Command cmd;
 	cmd.m_Command = dmTextInput::EVENT_ON_FOCUS_CHANGE;
-	cmd.m_Callback = g_TextInput.m_Listeners[self.id];
+	cmd.m_Callback = g_TextInput.m_Listeners[textField.tag];
 	cmd.m_Data = (void*)"0";
 	dmTextInput::Queue_Push(&g_TextInput.m_CommandQueue, &cmd);
 }
 
-- (void)onSubmit
+- (void)onSubmit:(UITextField*)textField
 {
 	dmTextInput::Command cmd;
 	cmd.m_Command = dmTextInput::EVENT_ON_SUBMIT;
-	cmd.m_Callback = g_TextInput.m_Listeners[self.id];
-	cmd.m_Data = CopyString(_view.text);
+	cmd.m_Callback = g_TextInput.m_Listeners[textField.tag];
+	cmd.m_Data = CopyString(_field.text);
 	dmTextInput::Queue_Push(&g_TextInput.m_CommandQueue, &cmd);
-	[_view resignFirstResponder];
+	[_field resignFirstResponder];
 }
 
 - (void)setSecureTextEntry:(BOOL)value
 {
-	_view.secureTextEntry = value;
+	_field.secureTextEntry = value;
 }
 
 - (void)setKeyboardType:(UIKeyboardType)type
 {
-	_view.keyboardType = type;
+	_field.keyboardType = type;
 }
 
 - (void)setAutocapitalizationType:(UITextAutocapitalizationType)type
 {
-	_view.autocapitalizationType = type;
+	_field.autocapitalizationType = type;
 }
 
 - (void)setReturnKeyType:(UIReturnKeyType)type
 {
-	_view.returnKeyType = type;
+	_field.returnKeyType = type;
 }
 
 - (void)setFocused:(BOOL)value
 {
-	if (!_view.hidden)
+	if (!_field.hidden)
 	{
 		if (value)
 		{
-			[_view becomeFirstResponder];
-			g_TextInput.m_FocusingOn = self.id;
+			[_field becomeFirstResponder];
+			g_TextInput.m_FocusingOn = _field.tag;
 		} else {
-			[_view resignFirstResponder];
-			if (self.focused)
+			[_field resignFirstResponder];
+			if (self.isFocused)
 			{
 				g_TextInput.m_FocusingOn = -1;
 			}
 		}
-		self.focused = value;
+		self.isFocused = value;
 	}
 }
 
 - (void)setVisible:(BOOL)value
 {
-	if (!value && self.focused)
+	if (!value && self.isFocused)
 	{
 		[self setFocused:NO];
 	}
-	_view.hidden = !value;
+	_field.hidden = !value;
 }
 
 - (void)setMaxLength:(int)value
 {
-	self.maxLength = value;
+	self.maximumLength = value;
 }
 
 - (void)setFrame:(CGRect)frame
 {
 	if (self.isHidden) return;
-	_view.frame = frame;
+	_field.frame = frame;
 }
 
 - (CGRect)getFrame
 {
-	if (self.isHidden) 
-		return CGRectMake(0,0,0,0);
-	
-	return _view.frame;
+	return _field.frame;
 }
 
 - (void)setText:(NSString*)text
 {
-	_view.text = text;
+	_field.text = text;
 }
 
 - (NSString*)getText
 {
-	return _view.text;
+	return _field.text;
+}
+
+- (void)setHintText:(NSString*)text
+{
+	self.placeholderText = text;
+	NSString* textColor = self.placeholderTextColor;
+	UIColor* color = [self colorFromHexString:textColor];
+	_field.attributedPlaceholder = [[NSAttributedString alloc] initWithString:text attributes:@{NSForegroundColorAttributeName: color}];
+}
+
+- (void)setHintTextColor:(NSString*)value
+{
+	self.placeholderTextColor = value;
+	UIColor* color = [self colorFromHexString:value];
+	NSString* text = self.placeholderText;
+	_field.attributedPlaceholder = [[NSAttributedString alloc] initWithString:text attributes:@{NSForegroundColorAttributeName: color}];
+}
+
+- (void)setTextColor:(NSString*)value
+{
+	UIColor* color = [self colorFromHexString:value];
+	_field.textColor = color;
+}
+
+- (void)setTextSize:(int)value
+{
+	CGFloat fontSize = (float)value;
+	UIFont* font = [_field.font fontWithSize:fontSize];
+	_field.font = font;
 }
 
 - (void)destroy
 {
-	if (self.focused)
+	if (self.isFocused)
 	{
 		[self setFocused:NO];
 	}
-	[_view removeFromSuperview];
-    [_view release];
+	[_field removeFromSuperview];
+	[_field release];
+}
+
+- (nullable UIColor *)colorFromHex:(NSUInteger)hex {
+    unsigned char r, g, b;
+    if (hex & ~0xffffffUL) return nil;
+    r = (unsigned char) (hex >> 16);
+    g = (unsigned char) (hex >> 8);
+    b = (unsigned char) hex;
+    return [UIColor colorWithRed:(CGFloat) r / 0xff
+                            green:(CGFloat) g / 0xff
+                            blue:(CGFloat) b / 0xff
+                            alpha:1.0];
+}
+
+- (nullable UIColor *)colorFromHexString:(nonnull NSString *)hexString {
+    unsigned int hex = 0;
+    if (hexString == nil) return nil;
+    if ([hexString hasPrefix:@"#"]) {
+        hexString = [hexString substringFromIndex:1];
+    }
+    if ([[NSScanner scannerWithString:hexString] scanHexInt:&hex]) {
+        return [self colorFromHex:hex];
+    }
+    return nil;
 }
 
 @end
@@ -227,262 +283,288 @@ static char* CopyString(NSString* s)
 
 namespace dmTextInput {
 
-void Initialize(dmExtension::Params* params)
-{
-}
-
-void Update()
-{
-	if (g_TextInput.m_CommandQueue.m_Commands.Empty())
+	void Initialize(dmExtension::Params* params)
 	{
-		return;
+		Queue_Create(&g_TextInput.m_CommandQueue);
 	}
 
-	dmArray<Command> tmp;
+	void Update()
 	{
-		DM_MUTEX_SCOPED_LOCK(g_TextInput.m_CommandQueue.m_Mutex);
-		tmp.Swap(g_TextInput.m_CommandQueue.m_Commands);
-	}
-
-	for(uint32_t i = 0; i != tmp.Size(); ++i)
-	{
-		Command* cmd = &tmp[i];
-		if (cmd->m_Callback != 0)
+		if (g_TextInput.m_CommandQueue.m_Commands.Empty())
 		{
-			lua_State* L = dmScript::GetCallbackLuaContext(cmd->m_Callback);
-			DM_LUA_STACK_CHECK(L, 0);
+			return;
+		}
 
-			if (dmScript::SetupCallback(cmd->m_Callback))
+		dmArray<Command> tmp;
+		{
+			DM_MUTEX_SCOPED_LOCK(g_TextInput.m_CommandQueue.m_Mutex);
+			tmp.Swap(g_TextInput.m_CommandQueue.m_Commands);
+		}
+
+		for(uint32_t i = 0; i != tmp.Size(); ++i)
+		{
+			Command* cmd = &tmp[i];
+			if (cmd->m_Callback != 0)
 			{
-				lua_pushnumber(L, cmd->m_Command);
-				if (cmd->m_Command == EVENT_ON_SUBMIT || cmd->m_Command == EVENT_ON_TEXT_CHANGED) {
-					lua_pushstring(L, (const char*)cmd->m_Data);
-				} else if (cmd->m_Command == EVENT_ON_FOCUS_CHANGE) {
-					lua_pushboolean(L, strcmp((const char*)cmd->m_Data, "1") == 0);
-				} else {
-					lua_pushnil(L);
-				}
+				lua_State* L = dmScript::GetCallbackLuaContext(cmd->m_Callback);
+				DM_LUA_STACK_CHECK(L, 0);
 
-				dmScript::PCall(L, 3, 0);
-				dmScript::TeardownCallback(cmd->m_Callback);
+				if (dmScript::SetupCallback(cmd->m_Callback))
+				{
+					lua_pushnumber(L, cmd->m_Command);
+					if (cmd->m_Command == EVENT_ON_SUBMIT || cmd->m_Command == EVENT_ON_TEXT_CHANGED) {
+						lua_pushstring(L, (const char*)cmd->m_Data);
+					} else if (cmd->m_Command == EVENT_ON_FOCUS_CHANGE) {
+						lua_pushboolean(L, strcmp((const char*)cmd->m_Data, "1") == 0);
+					} else {
+						lua_pushnil(L);
+					}
+
+					dmScript::PCall(L, 3, 0);
+					dmScript::TeardownCallback(cmd->m_Callback);
+				}
 			}
 		}
 	}
-}
 
-void Finalize()
-{
-	Queue_Destroy(&g_TextInput.m_CommandQueue);
-	for(std::map<int,dmScript::LuaCallbackInfo*>::iterator it = g_TextInput.m_Listeners.begin(); it != g_TextInput.m_Listeners.end(); ++it) {
-		dmScript::LuaCallbackInfo* callback = it->second;
+	void Finalize()
+	{
+		Queue_Destroy(&g_TextInput.m_CommandQueue);
+		for(std::map<int,dmScript::LuaCallbackInfo*>::iterator it = g_TextInput.m_Listeners.begin(); it != g_TextInput.m_Listeners.end(); ++it) {
+			dmScript::LuaCallbackInfo* callback = it->second;
+			if (callback != 0)
+			{
+				dmScript::DestroyCallback(callback);
+			}
+		}
+	}
+
+	int Create(bool isHidden, dmScript::LuaCallbackInfo* callback)
+	{
+		int id = g_TextInput.m_IdIncr++;
+		CTextInputHandler* textInput = [[CTextInputHandler alloc] init];
+		BOOL hidden = isHidden ? YES : NO;
+		[textInput initialize:id isHidden:hidden];
+		g_TextInput.m_TextInputs[id] = textInput;
+		g_TextInput.m_Listeners[id] = callback;
+
+		return id;
+	}
+
+	void Destroy(int id)
+	{
+		CTextInputHandler* textInput = g_TextInput.m_TextInputs[id];
+		if (textInput)
+		{
+			[textInput destroy];
+		}
+		g_TextInput.m_TextInputs[id] = NULL;
+		dmScript::LuaCallbackInfo* callback = g_TextInput.m_Listeners[id];
 		if (callback != 0)
 		{
 			dmScript::DestroyCallback(callback);
+			g_TextInput.m_Listeners[id] = 0;
 		}
 	}
-}
 
-int Create(bool isHidden, dmScript::LuaCallbackInfo* callback)
-{
-	int id = g_TextInput.m_IdIncr++;
-	CTextInputHandler* textInput = [[CTextInputHandler alloc] init];
-	BOOL hidden = isHidden ? YES : NO;
-	[textInput initialize:id isHidden:hidden];
-	g_TextInput.m_TextInputs[id] = textInput;
-	g_TextInput.m_Listeners[id] = callback;
-
-	return id;
-}
-
-void Destroy(int id)
-{
-	CTextInputHandler* textInput = g_TextInput.m_TextInputs[id];
-	if (textInput)
+	void SetVisible(int id, bool visible)
 	{
-		[textInput destroy];
+		CTextInputHandler* textInput = g_TextInput.m_TextInputs[id];
+		if (textInput)
+		{
+			BOOL value = visible ? YES : NO;
+			[textInput setVisible:value];
+		}
 	}
-	g_TextInput.m_TextInputs[id] = NULL;
-	dmScript::LuaCallbackInfo* callback = g_TextInput.m_Listeners[id];
-	if (callback != 0)
+
+	void SetHint(int id, const char* hint)
 	{
-		dmScript::DestroyCallback(callback);
-		g_TextInput.m_Listeners[id] = 0;
+		CTextInputHandler* textInput = g_TextInput.m_TextInputs[id];
+		if (textInput && !textInput.isHidden)
+		{
+			NSString* t = [NSString stringWithUTF8String:hint];
+			[textInput setHintText:t];
+		}
 	}
-}
 
-void SetVisible(int id, bool visible)
-{
-	CTextInputHandler* textInput = g_TextInput.m_TextInputs[id];
-	if (textInput)
+	void SetHintTextColor(int id, const char* color)
 	{
-		BOOL value = visible ? YES : NO;
-		[textInput setVisible:value];
+		CTextInputHandler* textInput = g_TextInput.m_TextInputs[id];
+		if (textInput && !textInput.isHidden)
+		{
+			NSString* s = [NSString stringWithUTF8String:color];
+			[textInput setHintTextColor:s];
+		}
 	}
-}
 
-void SetHint(int id, const char* hint)
-{
-}
-
-void SetHintTextColor(int id, const char* color)
-{
-}
-
-void SetText(int id, const char* text)
-{
-	CTextInputHandler* textInput = g_TextInput.m_TextInputs[id];
-	
-	NSString* t = [NSString stringWithUTF8String:text];
-	[textInput setText:t];
-}
-
-void SetTextColor(int id, const char* color)
-{
-}
-
-void SetTextSize(int id, int size)
-{
-}
-
-void SetPosition(int id, int x, int y)
-{
-	CTextInputHandler* textInput = g_TextInput.m_TextInputs[id];
-	if (textInput && !textInput.isHidden)
+	void SetText(int id, const char* text)
 	{
-		CGRect frame = [textInput getFrame];
-		frame.origin.x = x;
-		frame.origin.y = y;
-		[textInput setFrame:frame];
+		CTextInputHandler* textInput = g_TextInput.m_TextInputs[id];
+		if (textInput)
+		{
+			NSString* t = [NSString stringWithUTF8String:text];
+			[textInput setText:t];
+		}
 	}
-}
 
-void SetSize(int id, int width, int height)
-{
-	CTextInputHandler* textInput = g_TextInput.m_TextInputs[id];
-	if (textInput && !textInput.isHidden)
+	void SetTextColor(int id, const char* color)
 	{
-		CGRect frame = [textInput getFrame];
-		frame.size.width = width;
-		frame.size.height = height;
-		[textInput setFrame:frame];
+		CTextInputHandler* textInput = g_TextInput.m_TextInputs[id];
+		if (textInput && !textInput.isHidden)
+		{
+			NSString* s = [NSString stringWithUTF8String:color];
+			[textInput setTextColor:s];
+		}
 	}
-}
 
-void SetMaxLength(int id, int maxLength)
-{
-	CTextInputHandler* textInput = g_TextInput.m_TextInputs[id];
-	if (textInput)
+	void SetTextSize(int id, int size)
 	{
-		[textInput setMaxLength:maxLength];
+		CTextInputHandler* textInput = g_TextInput.m_TextInputs[id];
+		if (textInput && !textInput.isHidden)
+		{
+			[textInput setTextSize:size];
+		}
 	}
-}
 
-void SetKeyboardType(int id, KeyboardType keyboardType)
-{
-	CTextInputHandler* textInput = g_TextInput.m_TextInputs[id];
-	if (textInput)
+	void SetPosition(int id, int x, int y)
 	{
-		switch (keyboardType) {
-			case KEYBOARD_TYPE_NUMBER_PAD:
+		CTextInputHandler* textInput = g_TextInput.m_TextInputs[id];
+		if (textInput && !textInput.isHidden)
+		{
+			CGRect frame = [textInput getFrame];
+			frame.origin.x = x;
+			frame.origin.y = y;
+			[textInput setFrame:frame];
+		}
+	}
+
+	void SetSize(int id, int width, int height)
+	{
+		CTextInputHandler* textInput = g_TextInput.m_TextInputs[id];
+		if (textInput && !textInput.isHidden)
+		{
+			CGRect frame = [textInput getFrame];
+			frame.size.width = width;
+			frame.size.height = height;
+			[textInput setFrame:frame];
+		}
+	}
+
+	void SetMaxLength(int id, int maxLength)
+	{
+		CTextInputHandler* textInput = g_TextInput.m_TextInputs[id];
+		if (textInput)
+		{
+			[textInput setMaxLength:maxLength];
+		}
+	}
+
+	void SetKeyboardType(int id, KeyboardType keyboardType)
+	{
+		CTextInputHandler* textInput = g_TextInput.m_TextInputs[id];
+		if (textInput)
+		{
+			switch (keyboardType) {
+				case KEYBOARD_TYPE_NUMBER_PAD:
 				[textInput setSecureTextEntry:NO];
 				[textInput setKeyboardType:UIKeyboardTypeNumberPad];
 				break;
-			case KEYBOARD_TYPE_EMAIL:
+				case KEYBOARD_TYPE_EMAIL:
 				[textInput setSecureTextEntry:NO];
 				[textInput setKeyboardType:UIKeyboardTypeEmailAddress];
 				break;
-			case KEYBOARD_TYPE_PASSWORD:
+				case KEYBOARD_TYPE_PASSWORD:
 				[textInput setSecureTextEntry:YES];
 				[textInput setKeyboardType:UIKeyboardTypeDefault];
 				break;
-			default:
+				default:
 				[textInput setSecureTextEntry:NO];
 				[textInput setKeyboardType:UIKeyboardTypeDefault];
+			}
 		}
 	}
-}
 
-void SetAutoCapitalize(int id, Capitalize autoCapitalize)
-{
-	CTextInputHandler* textInput = g_TextInput.m_TextInputs[id];
-	if (textInput)
+	void SetAutoCapitalize(int id, Capitalize autoCapitalize)
 	{
-		switch (autoCapitalize) {
-			case CAPITALIZE_SENTENCES:
+		CTextInputHandler* textInput = g_TextInput.m_TextInputs[id];
+		if (textInput)
+		{
+			switch (autoCapitalize) {
+				case CAPITALIZE_SENTENCES:
 				[textInput setAutocapitalizationType:UITextAutocapitalizationTypeSentences];
 				break;
-			case CAPITALIZE_WORDS:
+				case CAPITALIZE_WORDS:
 				[textInput setAutocapitalizationType:UITextAutocapitalizationTypeWords];
 				break;
-			case CAPITALIZE_CHARACTERS:
+				case CAPITALIZE_CHARACTERS:
 				[textInput setAutocapitalizationType:UITextAutocapitalizationTypeAllCharacters];
 				break;
-			default:
+				default:
 				[textInput setAutocapitalizationType:UITextAutocapitalizationTypeNone];
+			}
 		}
 	}
-}
 
-void SetReturnKeyType(int id, ReturnKeyType returnKeyType)
-{
-	CTextInputHandler* textInput = g_TextInput.m_TextInputs[id];
-	if (textInput)
+	void SetReturnKeyType(int id, ReturnKeyType returnKeyType)
 	{
-		switch (returnKeyType) {
-			case RETURN_KEY_TYPE_DONE:
+		CTextInputHandler* textInput = g_TextInput.m_TextInputs[id];
+		if (textInput)
+		{
+			switch (returnKeyType) {
+				case RETURN_KEY_TYPE_DONE:
 				[textInput setReturnKeyType:UIReturnKeyDone];
 				break;
-			case RETURN_KEY_TYPE_GO:
+				case RETURN_KEY_TYPE_GO:
 				[textInput setReturnKeyType:UIReturnKeyGo];
 				break;
-			case RETURN_KEY_TYPE_NEXT:
+				case RETURN_KEY_TYPE_NEXT:
 				[textInput setReturnKeyType:UIReturnKeyNext];
 				break;
-			case RETURN_KEY_TYPE_SEARCH:
+				case RETURN_KEY_TYPE_SEARCH:
 				[textInput setReturnKeyType:UIReturnKeySearch];
 				break;
-			case RETURN_KEY_TYPE_SEND:
+				case RETURN_KEY_TYPE_SEND:
 				[textInput setReturnKeyType:UIReturnKeySend];
 				break;
-			default:
+				default:
 				[textInput setReturnKeyType:UIReturnKeyDefault];
+			}
 		}
 	}
-}
 
-const char* GetText(int id)
-{
-	CTextInputHandler* textInput = g_TextInput.m_TextInputs[id];
-	if (textInput)
+	const char* GetText(int id)
 	{
-		NSString* text = [textInput getText];
-		return CopyString(text);
-	}
-	return NULL;
-}
-
-void Focus(int id)
-{
-	CTextInputHandler* textInput = g_TextInput.m_TextInputs[id];
-	if (textInput && !textInput.focused)
-	{
-		if (g_TextInput.m_FocusingOn != -1)
+		CTextInputHandler* textInput = g_TextInput.m_TextInputs[id];
+		if (textInput)
 		{
-			CTextInputHandler* focusingTextInput = g_TextInput.m_TextInputs[g_TextInput.m_FocusingOn];
+			NSString* text = [textInput getText];
+			return CopyString(text);
+		}
+		return NULL;
+	}
+
+	void Focus(int id)
+	{
+		CTextInputHandler* textInput = g_TextInput.m_TextInputs[id];
+		if (textInput && !textInput.isFocused)
+		{
+			if (g_TextInput.m_FocusingOn != -1)
+			{
+				CTextInputHandler* focusingTextInput = g_TextInput.m_TextInputs[g_TextInput.m_FocusingOn];
+				[textInput setFocused:NO];
+			}
+			[textInput setFocused:YES];
+		}
+	}
+
+	void ClearFocus(int id)
+	{
+		CTextInputHandler* textInput = g_TextInput.m_TextInputs[id];
+		if (textInput && textInput.isFocused)
+		{
 			[textInput setFocused:NO];
 		}
-		[textInput setFocused:YES];
 	}
-}
-
-void ClearFocus(int id)
-{
-	CTextInputHandler* textInput = g_TextInput.m_TextInputs[id];
-	if (textInput && textInput.focused)
-	{
-		[textInput setFocused:NO];
-	}
-}
 
 } // namespace
 
