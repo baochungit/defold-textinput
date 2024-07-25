@@ -255,27 +255,27 @@ static char* CopyString(NSString* s)
 }
 
 - (nullable UIColor *)colorFromHex:(NSUInteger)hex {
-    unsigned char r, g, b;
-    if (hex & ~0xffffffUL) return nil;
-    r = (unsigned char) (hex >> 16);
-    g = (unsigned char) (hex >> 8);
-    b = (unsigned char) hex;
-    return [UIColor colorWithRed:(CGFloat) r / 0xff
-                            green:(CGFloat) g / 0xff
-                            blue:(CGFloat) b / 0xff
-                            alpha:1.0];
+	unsigned char r, g, b;
+	if (hex & ~0xffffffUL) return nil;
+	r = (unsigned char) (hex >> 16);
+	g = (unsigned char) (hex >> 8);
+	b = (unsigned char) hex;
+	return [UIColor colorWithRed:(CGFloat) r / 0xff
+							green:(CGFloat) g / 0xff
+							blue:(CGFloat) b / 0xff
+							alpha:1.0];
 }
 
 - (nullable UIColor *)colorFromHexString:(nonnull NSString *)hexString {
-    unsigned int hex = 0;
-    if (hexString == nil) return nil;
-    if ([hexString hasPrefix:@"#"]) {
-        hexString = [hexString substringFromIndex:1];
-    }
-    if ([[NSScanner scannerWithString:hexString] scanHexInt:&hex]) {
-        return [self colorFromHex:hex];
-    }
-    return nil;
+	unsigned int hex = 0;
+	if (hexString == nil) return nil;
+	if ([hexString hasPrefix:@"#"]) {
+		hexString = [hexString substringFromIndex:1];
+	}
+	if ([[NSScanner scannerWithString:hexString] scanHexInt:&hex]) {
+		return [self colorFromHex:hex];
+	}
+	return nil;
 }
 
 @end
@@ -431,9 +431,12 @@ namespace dmTextInput {
 		CTextInputHandler* textInput = g_TextInput.m_TextInputs[id];
 		if (textInput && !textInput.isHidden)
 		{
+			UIView* glview = (UIView*)dmGraphics::GetNativeiOSUIView();
+			CGRect screenRect = glview.frame;
+			CGFloat scale = glview.layer.contentsScale;
 			CGRect frame = [textInput getFrame];
-			frame.origin.x = x;
-			frame.origin.y = y;
+			frame.origin.x = screenRect.origin.x + (x / scale);
+			frame.origin.y = screenRect.origin.y + (y / scale);
 			[textInput setFrame:frame];
 		}
 	}
@@ -443,9 +446,11 @@ namespace dmTextInput {
 		CTextInputHandler* textInput = g_TextInput.m_TextInputs[id];
 		if (textInput && !textInput.isHidden)
 		{
+			UIView* glview = (UIView*)dmGraphics::GetNativeiOSUIView();
+			CGFloat scale = glview.layer.contentsScale;
 			CGRect frame = [textInput getFrame];
-			frame.size.width = width;
-			frame.size.height = height;
+			frame.size.width = width / scale;
+			frame.size.height = height / scale;
 			[textInput setFrame:frame];
 		}
 	}
