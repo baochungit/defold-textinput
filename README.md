@@ -1,6 +1,6 @@
 # Defold TextInput
 
-This extension brings Native TextInput to game engine.
+This extension brings Native Text Input Field to Defold.
 Currently supports Android, iOS. HTML5 and others are underway...
 
 ## Example:
