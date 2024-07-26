@@ -1,7 +1,7 @@
 # Defold TextInput
 
 This extension brings Native Text Input Field to Defold.
-Currently it supports Android, iOS. HTML5 and others are underway...
+Currently it supports Android, iOS, HTML5.
 
 ## Example:
 ```lua
