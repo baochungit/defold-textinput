@@ -19,7 +19,7 @@ static TextInput g_TextInput;
 typedef void (*OnAddToCommandQueue)(int id, int eventName, const char* value);
 static void AddToCommandQueue(int id, int eventName, const char* value)
 {
-	if (eventName == EVENT_ON_TEXT_CHANGED) {
+	if (eventName == EVENT_ON_TEXT_CHANGED || eventName == EVENT_ON_SUBMIT) {
 		Command cmd;
 		cmd.m_Command = eventName;
 		cmd.m_Callback = g_TextInput.m_Listeners[id];
