@@ -35,8 +35,8 @@ static void AddToCommandQueue(int id, int eventName, const char* value)
 }
 
 
-extern "C" int JS_TextInput_initialize();
-extern "C" int JS_TextInput_create(int isHidden, OnAddToCommandQueue f);
+extern "C" int JS_TextInput_initialize(OnAddToCommandQueue f);
+extern "C" int JS_TextInput_create(int isHidden);
 extern "C" void JS_TextInput_remove(int id);
 extern "C" void JS_TextInput_setVisible(int id, bool visible);
 extern "C" void JS_TextInput_setHint(int id, const char* hint);
@@ -57,7 +57,7 @@ extern "C" void JS_TextInput_clearFocus(int id);
 
 void Initialize(dmExtension::Params* params)
 {
-	JS_TextInput_initialize();
+	JS_TextInput_initialize((OnAddToCommandQueue)AddToCommandQueue);
 	Queue_Create(&g_TextInput.m_CommandQueue);
 }
 
@@ -114,7 +114,7 @@ void Finalize()
 
 int Create(bool isHidden, dmScript::LuaCallbackInfo* callback)
 {
-	int id = JS_TextInput_create(isHidden, (OnAddToCommandQueue)AddToCommandQueue);
+	int id = JS_TextInput_create(isHidden);
 	g_TextInput.m_Listeners[id] = callback;
 
 	return id;

@@ -1,15 +1,22 @@
 
-local function focus(self, id)
-	if textinput then
-		self.active_id = id
-		textinput.focus(id)
-	end
+local function get_screen_scale()
+	local display_width, display_height = sys.get_config_int("display.width"), sys.get_config_int("display.height")
+	local window_width, window_height = window.get_size()
+	local sx = window_width / display_width
+	local sy = window_height / display_height
+	return math.min(sx, sy)
 end
 
-local function clear_focus(self)
-	if textinput and self.active_id then
-		textinput.clear_focus(self.active_id)
-	end
+local function calc_position_and_size(node)
+	local window_width, window_height = window.get_size()
+	local pos = gui.get_screen_position(node)
+	local size = gui.get_size(node)
+	local scale = get_screen_scale()
+	local width, height = size.x * scale, size.y * scale
+	return {
+		position = { x = pos.x - width / 2, y = window_height - pos.y - height / 2 },
+		size = { width = width, height = height }
+	}
 end
 
 local function create_textinput1(self)
@@ -29,8 +36,14 @@ local function create_textinput1(self)
 		end
 	end)
 	textinput.set_max_length(id, 30)
-	textinput.set_auto_capitalize(id, textinput.CAPITALIZE_WORDS)
-	textinput.set_return_key_type(id, textinput.RETURN_KEY_TYPE_GO)
+	textinput.set_keyboard_type(id, textinput.KEYBOARD_TYPE_EMAIL)
+	textinput.set_return_key_type(id, textinput.RETURN_KEY_TYPE_NEXT)
+
+	-- we still need position & size to work on mobile browsers
+	local ps = calc_position_and_size(gui.get_node("box1"))
+	textinput.set_position(id, ps.position.x, ps.position.y)
+	textinput.set_size(id, ps.size.width, ps.size.height)
+
 	return id
 end
 
@@ -48,30 +61,56 @@ local function create_textinput2(self)
 			gui.set_text(gui.get_node("text2"), data)
 		end
 	end)
-	textinput.set_max_length(id, 10)
-	textinput.set_auto_capitalize(id, textinput.CAPITALIZE_CHARACTERS)
+	textinput.set_max_length(id, 20)
+	textinput.set_auto_capitalize(id, textinput.CAPITALIZE_SENTENCES)
+
+	-- we still need position & size to work on mobile browsers
+	local ps = calc_position_and_size(gui.get_node("box2"))
+	textinput.set_position(id, ps.position.x, ps.position.y)
+	textinput.set_size(id, ps.size.width, ps.size.height)
+
 	return id
 end
 
 local function create_textinput3(self)
 	local id = nil
 	id = textinput.create(false, function(_, ev, data)
+		if ev == textinput.EVENT_ON_FOCUS_CHANGE then
+			if data == true then
+				gui.set_color(gui.get_node("box3"), vmath.vector4(0.6, 0.6, 0.6, 1))
+			else
+				gui.set_color(gui.get_node("box3"), vmath.vector4(0.4, 0.4, 0.4, 1))
+			end
+		end
 	end)
-	textinput.set_hint(id, "Enter here...")
-	textinput.set_hint_text_color(id, "#0000ff")
-	textinput.set_text_color(id, "#ff0000")
-	textinput.set_position(id, 10, 10)
-	textinput.set_size(id, 200, 30)
+	local ps = calc_position_and_size(gui.get_node("box3_content"))
+	textinput.set_position(id, ps.position.x, ps.position.y)
+	textinput.set_size(id, ps.size.width, ps.size.height)
+	textinput.set_hint(id, "I'm a native input...")
+	textinput.set_hint_text_color(id, "#eeeeee")
+	textinput.set_text_color(id, "#ffff00")
 	textinput.set_auto_capitalize(id, textinput.CAPITALIZE_SENTENCES)
-	textinput.set_visible(id, true)
 	return id
+end
+
+local function focus(self, id)
+	if textinput then
+		self.active_id = id
+		textinput.focus(id)
+	end
+end
+
+local function clear_focus(self)
+	if textinput and self.active_id then
+		textinput.clear_focus(self.active_id)
+	end
 end
 
 function init(self)
 	if textinput then
 		self.id1 = create_textinput1(self)
 		self.id2 = create_textinput2(self)
-		-- self.id3 = create_textinput3(self)
+		self.id3 = create_textinput3(self)
 	end
 end
 
@@ -91,9 +130,9 @@ function on_input(self, action_id, action)
 			end)
 			return true
 		end
-		if gui.pick_node(gui.get_node("box3"), action.x, action.y) then
-			gui.set_scale(gui.get_node("box3"), vmath.vector3(0.95))
-			gui.animate(gui.get_node("box3"), "scale", 1, gui.EASING_LINEAR, 0.2, 0, function()
+		if gui.pick_node(gui.get_node("btn_hide"), action.x, action.y) then
+			gui.set_scale(gui.get_node("btn_hide"), vmath.vector3(0.95))
+			gui.animate(gui.get_node("btn_hide"), "scale", 1, gui.EASING_LINEAR, 0.2, 0, function()
 				clear_focus(self)
 			end)
 			return true
