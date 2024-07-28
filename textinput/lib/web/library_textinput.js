@@ -92,13 +92,11 @@ var LibraryTextInput = {
         field.addEventListener('keyup', function(ev) {
             const key = ev.code || ev.keyCode;
             if (key === 'Enter' || key === 13) {
-                TextInput.addEventToQueue(id, TextInput.Event.EVENT_ON_SUBMIT, field.value);
-            } else {
-                TextInput.addEventToQueue(id, TextInput.Event.EVENT_ON_TEXT_CHANGED, field.value);
+                TextInput.addEventToQueue(id, TextInput.Event.EVENT_ON_SUBMIT, this.value);
             }
         });
-        field.addEventListener('keypress', function(ev) {
-            TextInput.addEventToQueue(id, TextInput.Event.EVENT_ON_TEXT_CHANGED, field.value);
+        field.addEventListener('input', function (ev) {
+            TextInput.addEventToQueue(id, TextInput.Event.EVENT_ON_TEXT_CHANGED, this.value);
         });
         field.addEventListener('focus', function(ev) {
             TextInput.addEventToQueue(id, TextInput.Event.EVENT_ON_FOCUS_CHANGE, '1');
