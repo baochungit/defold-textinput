@@ -69,7 +69,7 @@ static char* CopyString(NSString* s)
 
 - (void)initialize:(int)id isHidden:(BOOL)hidden
 {
-	_field = [[UITextField alloc] initWithFrame:CGRectMake(0, -100, 0, 0)];
+	_field = [[UITextField alloc] initWithFrame:CGRectMake(0, 0, 0, 0)];
 	[_field addTarget:self action:@selector(onTextChanged:) forControlEvents:UIControlEventEditingChanged];
 	[_field addTarget:self action:@selector(onFocused:) forControlEvents:UIControlEventEditingDidBegin];
 	[_field addTarget:self action:@selector(onUnfocused:) forControlEvents:UIControlEventEditingDidEnd];

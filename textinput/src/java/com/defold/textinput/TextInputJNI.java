@@ -114,11 +114,11 @@ public class TextInputJNI {
           }
         });
 
-        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(300, 150);
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(1, 1);
         params.gravity = Gravity.TOP | Gravity.LEFT;
         params.setMargins(0, 0, 0, 0);
         editText.setLayoutParams(params);
-        editText.setVisibility(isHidden ? View.VISIBLE : View.GONE);
+        editText.setVisibility(View.VISIBLE);
         if (isHidden) {
           editText.setImeOptions(EditorInfo.IME_ACTION_DONE);
         }
@@ -172,7 +172,7 @@ public class TextInputJNI {
       @Override
       public void run() {
         EditTextInfo info = getEditTextInfo(id);
-        if (info != null) {
+        if (info != null && !info.isHidden) {
           info.editText.setHint(hint);
         }
       }
@@ -184,7 +184,7 @@ public class TextInputJNI {
       @Override
       public void run() {
         EditTextInfo info = getEditTextInfo(id);
-        if (info != null) {
+        if (info != null && !info.isHidden) {
           info.editText.setHintTextColor(Color.parseColor(color));
         }
       }
@@ -196,7 +196,7 @@ public class TextInputJNI {
       @Override
       public void run() {
         EditTextInfo info = getEditTextInfo(id);
-        if (info != null) {
+        if (info != null && !info.isHidden) {
           info.editText.setText(text);
           info.editText.setSelection(info.editText.getText().length());
         }
@@ -209,7 +209,7 @@ public class TextInputJNI {
       @Override
       public void run() {
         EditTextInfo info = getEditTextInfo(id);
-        if (info != null) {
+        if (info != null && !info.isHidden) {
           info.editText.setTextColor(Color.parseColor(color));
         }
       }
@@ -221,7 +221,7 @@ public class TextInputJNI {
       @Override
       public void run() {
         EditTextInfo info = getEditTextInfo(id);
-        if (info != null) {
+        if (info != null && !info.isHidden) {
           info.editText.setTextSize((float)size);
         }
       }
@@ -233,7 +233,7 @@ public class TextInputJNI {
       @Override
       public void run() {
         EditTextInfo info = getEditTextInfo(id);
-        if (info != null) {
+        if (info != null && !info.isHidden) {
           info.params.leftMargin = x;
           info.params.topMargin = y;
           info.editText.setLayoutParams(info.params);
@@ -247,7 +247,7 @@ public class TextInputJNI {
       @Override
       public void run() {
         EditTextInfo info = getEditTextInfo(id);
-        if (info != null) {
+        if (info != null && !info.isHidden) {
           info.params.width = width;
           info.params.height = height;
           info.editText.setLayoutParams(info.params);
