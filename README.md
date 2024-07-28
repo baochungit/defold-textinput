@@ -3,6 +3,9 @@
 This extension brings Native Text Input Field to Defold.
 Currently it supports Android, iOS, HTML5.
 
+## Demo:
+https://baochungit.github.io/defold-textinput/
+
 ## Example:
 ```lua
 local id = textinput.create(false, function(self, ev, data)
