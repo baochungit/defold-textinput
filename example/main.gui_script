@@ -1,4 +1,13 @@
 
+local function get_window_scale()
+	if html5 then
+		local window_width, window_height = window.get_size()
+		local actual_height = tonumber(html5.run("document.getElementById('canvas').getBoundingClientRect().height;"))
+		return actual_height / window_height
+	end
+	return 1
+end
+
 local function get_screen_scale()
 	local display_width, display_height = sys.get_config_int("display.width"), sys.get_config_int("display.height")
 	local window_width, window_height = window.get_size()
@@ -9,13 +18,14 @@ end
 
 local function calc_position_and_size(node)
 	local window_width, window_height = window.get_size()
+	local window_scale = get_window_scale()
 	local pos = gui.get_screen_position(node)
 	local size = gui.get_size(node)
 	local scale = get_screen_scale()
 	local width, height = size.x * scale, size.y * scale
 	return {
-		position = { x = pos.x - width / 2, y = window_height - pos.y - height / 2 },
-		size = { width = width, height = height }
+		position = { x = (pos.x - width / 2) * window_scale, y = (window_height - pos.y - height / 2) * window_scale },
+		size = { width = width * window_scale, height = height * window_scale }
 	}
 end
 
@@ -107,6 +117,7 @@ local function clear_focus(self)
 end
 
 function init(self)
+	msg.post(".", "acquire_input_focus")
 	if textinput then
 		self.id1 = create_textinput1(self)
 		self.id2 = create_textinput2(self)
